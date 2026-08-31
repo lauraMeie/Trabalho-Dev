@@ -57,11 +57,11 @@ class AppTheme {
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
-        elevation: 0,
+        elevation: 4,
         centerTitle: false,
 
         titleTextStyle: TextStyle(
-          color: AppColors.textPrimary,
+          color: Color(0xFF2E2545),
           fontSize: 20,
           fontWeight: FontWeight.w600,
         ),

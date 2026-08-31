@@ -1,3 +1,6 @@
+//parte que deixa as escritas e os botões em forma de retangulas um em baio do outro por enqunto não será utilizado pois decidi mudar
+
+
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
