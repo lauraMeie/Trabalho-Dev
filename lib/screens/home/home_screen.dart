@@ -10,8 +10,16 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+            appBar: AppBar(
         title: const Text('Início'),
+        actions: [
+          TextButton.icon(
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.login),
+            icon: const Icon(Icons.login, size: 18),
+            label: const Text('Login'),
+          ),
+        ],
       ),
             body: SafeArea(
         child: Column(

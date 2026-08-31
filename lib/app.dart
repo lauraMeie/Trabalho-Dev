@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'routes/app_routes.dart';
 import 'theme/app_theme.dart';
+import 'screens/login/login_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/turmas/turmas_screen.dart';
 import 'screens/questoes/banco_questoes_screen.dart';
@@ -19,6 +20,7 @@ class ProvasApp extends StatelessWidget {
       theme: AppTheme.light,
       initialRoute: AppRoutes.home,
       routes: {
+        AppRoutes.login: (context) => const LoginScreen(),
         AppRoutes.home: (context) => const HomeScreen(),
         AppRoutes.turmas: (context) => const TurmasScreen(),
         AppRoutes.bancoQuestoes: (context) => const BancoQuestoesScreen(),
