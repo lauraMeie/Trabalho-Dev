@@ -13,23 +13,39 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Início'),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Olá, Professor!',
-                style: Theme.of(context).textTheme.headlineSmall,
+            body: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              color: AppColors.primary,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Bem vindo!',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                        ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'Hora de gerenciar suas avaliações de forma simples e rápida.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                'Gerencie suas avaliações de forma simples e rápida.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+            ),
 
-              const SizedBox(height: AppSpacing.lg),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
 
               Card(
                 child: Padding(
@@ -87,15 +103,18 @@ class HomeScreen extends StatelessWidget {
                     Navigator.of(context).pushNamed(AppRoutes.corrigirProva),
               ),
               const SizedBox(height: AppSpacing.sm),
-              MenuCard(
+                            MenuCard(
                 icon: Icons.bar_chart_outlined,
                 title: 'Relatórios',
                 subtitle: 'Acompanhe os resultados',
                 onTap: () =>
                     Navigator.of(context).pushNamed(AppRoutes.relatorios),
               ),
-            ],
-          ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

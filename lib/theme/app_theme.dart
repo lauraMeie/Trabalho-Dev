@@ -1,12 +1,7 @@
-
 import 'package:flutter/material.dart';
 
 class AppColors {
   AppColors._();
-
-  // ==============================
-  // PALETA LILÁS CLARA
-  // ==============================
 
   static const Color primary = Color(0xFF8B5CF6); // lilás principal
   static const Color primaryDark = Color(0xFF6D28D9); // lilás escuro
@@ -57,12 +52,7 @@ class AppTheme {
 
       fontFamily: 'Roboto',
     );
-
     return base.copyWith(
-
-      // ==============================
-      // APP BAR
-      // ==============================
 
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
@@ -77,9 +67,6 @@ class AppTheme {
         ),
       ),
 
-      // ==============================
-      // TEXTOS
-      // ==============================
 
       textTheme: base.textTheme.copyWith(
 
@@ -101,9 +88,7 @@ class AppTheme {
         ),
       ),
 
-      // ==============================
-      // BOTÃO PRINCIPAL
-      // ==============================
+
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -128,9 +113,6 @@ class AppTheme {
         ),
       ),
 
-      // ==============================
-      // BOTÃO CONTORNADO
-      // ==============================
 
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
@@ -153,9 +135,6 @@ class AppTheme {
         ),
       ),
 
-      // ==============================
-      // CARDS
-      // ==============================
 
       cardTheme: CardThemeData(
         color: AppColors.surface,
