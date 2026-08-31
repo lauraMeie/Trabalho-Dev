@@ -56,6 +56,7 @@ Nesta fase (N1), o aplicativo contempla:
 | RF12 | Importar lista de alunos |
 | RF13 | Gerar prova individualizada e identificável por aluno |
 | RF14 | Editar o layout da prova gerada |
+| RF15 | Permitir navegação e visualização das telas sem exigir login; autenticação (login) é necessária apenas para operações que gravam dados no banco (ex.: salvar turma, prova, correção) |
 
 ## Requisitos Não Funcionais gerais (RNF)
 
@@ -66,6 +67,7 @@ Nesta fase (N1), o aplicativo contempla:
 | RNF03 | Correção rápida o suficiente para turmas grandes |
 | RNF04 | Leitura confiável das respostas, sem erro de quebra de página |
 | RNF05 | Exportação de dados em formato de planilha (Excel) |
+| RNF06 | O login não deve ser obrigatório para uso exploratório do app; funcionalidades de escrita/persistência (a partir da N2) devem exigir usuário autenticado |
 
 ## Telas principais
 
@@ -77,10 +79,12 @@ Nesta fase (N1), o aplicativo contempla:
 | **Criar Prova** | Montagem/geração de uma nova avaliação |
 | **Corrigir Prova** | Correção automatizada das provas aplicadas |
 | **Relatórios** | Visualização dos resultados e estatísticas das provas corrigidas |
+| **Login** | Tela de autenticação (mock nesta fase), acessível opcionalmente a partir da Home; será exigida futuramente para ações que gravam dados no banco |
+
 
 > Nesta fase (N1), todas as telas — exceto a Home — são versões mock, com dados
 > fictícios, servindo para validar a navegação entre as funcionalidades do app.
-
+> Autenticação de usuários (a tela de Login existe apenas como mock nesta fase, sem validação real);
 ## Como executar
 
 1. Instale o Flutter SDK: https://docs.flutter.dev/get-started/install
