@@ -5,7 +5,7 @@ import 'package:trabalho/app.dart';
 
 void main() {
   testWidgets('Home carrega e mostra o menu principal', (WidgetTester tester) async {
-    await tester.pumpWidget(const ProvasApp());
+    await tester.pumpWidget(const ProvaLab());
 
     expect(find.text('Olá, Professor!'), findsOneWidget);
     expect(find.text('Turmas'), findsOneWidget);

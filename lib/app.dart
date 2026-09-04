@@ -9,13 +9,13 @@ import 'screens/provas/criar_prova_screen.dart';
 import 'screens/correcao/corrigir_prova_screen.dart';
 import 'screens/relatorios/relatorios_screen.dart';
 
-class ProvasApp extends StatelessWidget {
-  const ProvasApp({super.key});
+class ProvaLab extends StatelessWidget {
+  const ProvaLab({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Provas App',
+      title: 'ProvaLab',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       initialRoute: AppRoutes.home,
