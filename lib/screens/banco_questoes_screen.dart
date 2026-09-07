@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../data/question_bank.dart';
@@ -55,15 +54,18 @@ class _BancoQuestoesScreenState extends State<BancoQuestoesScreen> {
                       maxLines: 3,
                     ),
                     const SizedBox(height: 12),
-                    const Text('Alternativas (selecione a correta):'),
+                    const Text('Alternativas (toque no círculo da correta):'),
                     for (int i = 0; i < 5; i++)
                       Row(
                         children: [
-                          Radio<int>(
-                            value: i,
-                            groupValue: correctIndex,
-                            onChanged: (value) {
-                              setDialogState(() => correctIndex = value!);
+                          IconButton(
+                            icon: Icon(
+                              correctIndex == i
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_unchecked,
+                            ),
+                            onPressed: () {
+                              setDialogState(() => correctIndex = i);
                             },
                           ),
                           Expanded(
@@ -169,7 +171,7 @@ class _BancoQuestoesScreenState extends State<BancoQuestoesScreen> {
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: _questoes.length,
-        separatorBuilder: (_, __) => const Divider(),
+        separatorBuilder: (_, _) => const Divider(),
         itemBuilder: (context, index) {
           final questao = _questoes[index];
           return ExpansionTile(
