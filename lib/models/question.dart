@@ -15,9 +15,7 @@ class Question {
     required this.statement,
     required this.alternatives,
     required this.correctIndex,
-  })  : assert(alternatives.length == 5,
-            'Cada questão deve ter exatamente 5 alternativas'),
-        assert(correctIndex >= 0 && correctIndex < 5,
+  }) : assert(correctIndex >= 0 && correctIndex < 5,
             'correctIndex deve estar entre 0 e 4');
 
   /// Retorna a letra da alternativa correta (A, B, C, D ou E)
