@@ -1,0 +1,28 @@
+name: Flutter Check
+
+# Roda toda vez que alguém enviar código para a main ou abrir um Pull Request
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      # Baixa o código do repositório dentro do robô do GitHub
+      - uses: actions/checkout@v4
+
+      # Instala o Flutter DENTRO do robô (não na sua máquina)
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # Baixa as dependências do projeto (equivalente ao "flutter pub get")
+      - name: Instalar dependências
+        run: flutter pub get
+
+      # Verifica se existe algum erro de sintaxe, import quebrado, etc.
+      - name: Analisar código
+        run: flutter analyze
