@@ -19,47 +19,69 @@ class MenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      return Card(
-      shape: RoundedRectangleBorder(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        side: const BorderSide(color: Color(0xFF2E2545), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: InkWell(
+      child: Material(
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppRadius.button),
-                ),
-                child: Icon(icon, color: AppColors.primary),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppRadius.button),
+                    ),
+                    child: Icon(icon, color: AppColors.primary, size: 24),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textPrimary.withValues(alpha: 0.7),
+                          ),
+                    ),
+                  ],
+                ],
               ),
-                            const SizedBox(height: AppSpacing.sm),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              if (subtitle != null) ...[
-                const SizedBox(height: 2),
-                Text(
-                  subtitle!,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: 11,
-                      ),
-                ),
-              ],
-            ],
+            ),
           ),
         ),
       ),
