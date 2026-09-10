@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../data/mock_questoes.dart';
 import '../models/prova_config.dart';
-import '../question.dart';
 
 /// Tela "Criar Prova" (Fase N1 - dados mock, sem persistência real).
 ///
@@ -15,8 +14,8 @@ import '../question.dart';
 /// Organizada em 4 etapas (Stepper): selecionar questões, configurar
 /// prova, embaralhamento e tela da prova (preview final).
 ///
-/// Usa o model [Question] (lib/question.dart) do Banco de Questões, onde
-/// toda questão tem sempre 5 alternativas (A a E).
+/// Usa o model [Question] (lib/models/question.dart) do Banco de Questões,
+/// onde toda questão tem sempre 5 alternativas (A a E).
 class CriarProvaScreen extends StatefulWidget {
   const CriarProvaScreen({super.key});
 
@@ -197,7 +196,7 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: _questoesFiltradas.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
+          separatorBuilder: (_, _) => const Divider(height: 1),
           itemBuilder: (context, index) {
             final questao = _questoesFiltradas[index];
             final selecionada = _questoesSelecionadasIds.contains(questao.id);
@@ -266,25 +265,31 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Column(
               children: [
-                RadioListTile<bool>(
+                ListTile(
                   contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    _config.mesmaProvaParaTodos
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                  ),
                   title: const Text('Mesma prova para todos os alunos'),
                   subtitle: const Text(
                       'Todos recebem as mesmas questões e alternativas'),
-                  value: true,
-                  groupValue: _config.mesmaProvaParaTodos,
-                  onChanged: (v) =>
-                      setState(() => _config.mesmaProvaParaTodos = v!),
+                  onTap: () =>
+                      setState(() => _config.mesmaProvaParaTodos = true),
                 ),
-                RadioListTile<bool>(
+                ListTile(
                   contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    !_config.mesmaProvaParaTodos
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                  ),
                   title: const Text('Provas individualizadas por aluno'),
                   subtitle: const Text(
                       'Cada aluno recebe uma prova identificável e única'),
-                  value: false,
-                  groupValue: _config.mesmaProvaParaTodos,
-                  onChanged: (v) =>
-                      setState(() => _config.mesmaProvaParaTodos = v!),
+                  onTap: () =>
+                      setState(() => _config.mesmaProvaParaTodos = false),
                 ),
               ],
             ),
