@@ -1,10 +1,9 @@
-import '../models/question.dart';
 import '../models/prova_config.dart';
 
 /// Dados fictícios para a Fase N1 (sem persistência real).
 /// Servem para popular a tela de Criar Prova sem depender de banco de dados.
 ///
-/// Usa o model [Question] definido em lib/question.dart (Banco de Questões).
+/// Usa o model [Question] definido em lib/models/question.dart (Banco de Questões).
 /// Atenção: nesse model toda questão tem sempre 5 alternativas (A a E).
 
 final List<Turma> mockTurmas = [
