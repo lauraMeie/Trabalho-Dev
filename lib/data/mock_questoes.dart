@@ -1,4 +1,4 @@
-import '../question.dart';
+import '../models/question.dart';
 import '../models/prova_config.dart';
 
 /// Dados fictícios para a Fase N1 (sem persistência real).
