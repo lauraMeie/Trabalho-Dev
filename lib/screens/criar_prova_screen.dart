@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../data/mock_questoes.dart';
 import '../models/prova_config.dart';
-import '../models/question.dart';
 
 /// Tela "Criar Prova" (Fase N1 - dados mock, sem persistência real).
 ///
