@@ -57,6 +57,7 @@ Nesta fase (N1), o aplicativo contempla:
 | RF13 | Gerar prova individualizada e identificável por aluno |
 | RF14 | Editar o layout da prova gerada |
 | RF15 | Permitir navegação e visualização das telas sem exigir login; autenticação (login) é necessária apenas para operações que gravam dados no banco (ex.: salvar turma, prova, correção) |
+| RF16 | Conseguir editar e remover questões/turmar/provas|
 
 ## Requisitos Não Funcionais gerais (RNF)
 
