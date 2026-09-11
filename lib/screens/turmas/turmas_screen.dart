@@ -31,7 +31,7 @@ class _TurmasScreenState extends State<TurmasScreen> {
           : ListView.separated(
               padding: const EdgeInsets.all(AppSpacing.lg),
               itemCount: _turmas.length,
-              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
               itemBuilder: (context, index) {
                 final turma = _turmas[index];
                 return Card(

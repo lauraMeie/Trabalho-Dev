@@ -24,7 +24,7 @@ class _TurmaDetalheScreenState extends State<TurmaDetalheScreen> {
           : ListView.separated(
               padding: const EdgeInsets.all(AppSpacing.lg),
               itemCount: alunos.length,
-              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
               itemBuilder: (context, index) {
                 final aluno = alunos[index];
                 return Card(
