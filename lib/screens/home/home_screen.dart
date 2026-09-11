@@ -179,12 +179,13 @@ class _HomeContent extends StatelessWidget {
                     crossAxisCount: 1,
                     crossAxisSpacing: AppSpacing.sm,
                     mainAxisSpacing: AppSpacing.sm,
-                    childAspectRatio: isNarrow ? 2.6 : 4.2,
+                    childAspectRatio: isNarrow ? 3.1 : 4.6,
                     children: [
                       MenuTile(
                         icon: Icons.groups_outlined,
                         title: 'Turmas',
                         subtitle: 'Gerencie suas turmas e alunos',
+                        imageAsset: 'assets/images/icon_turmas.svg',
                         onTap: () => Navigator.of(context)
                             .pushNamed(AppRoutes.turmas),
                       ),
@@ -192,6 +193,7 @@ class _HomeContent extends StatelessWidget {
                         icon: Icons.quiz_outlined,
                         title: 'Banco de Questões',
                         subtitle: 'Cadastre e organize questões',
+                        imageAsset: 'assets/images/icon_banco_questoes.svg',
                         onTap: () => Navigator.of(context)
                             .pushNamed(AppRoutes.bancoQuestoes),
                       ),
@@ -199,6 +201,7 @@ class _HomeContent extends StatelessWidget {
                         icon: Icons.edit_document,
                         title: 'Criar Prova',
                         subtitle: 'Monte uma nova avaliação',
+                        imageAsset: 'assets/images/icon_criar_prova.svg',
                         onTap: () => Navigator.of(context)
                             .pushNamed(AppRoutes.criarProva),
                       ),
@@ -206,6 +209,7 @@ class _HomeContent extends StatelessWidget {
                         icon: Icons.fact_check_outlined,
                         title: 'Corrigir Prova',
                         subtitle: 'Correção automatizada das provas',
+                        imageAsset: 'assets/images/icon_corrigir_prova.svg',
                         onTap: () => Navigator.of(context)
                             .pushNamed(AppRoutes.corrigirProva),
                       ),
