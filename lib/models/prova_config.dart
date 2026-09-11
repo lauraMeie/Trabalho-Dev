@@ -1,3 +1,7 @@
+// Reexporta Question para quem importar só este arquivo já ter acesso
+// ao model, sem precisar de dois imports.
+export 'question.dart';
+
 /// Representa uma turma (usada aqui só para vincular a prova a uma turma;
 /// o cadastro completo de turmas fica a cargo da tela "Turmas").
 class Turma {
@@ -32,7 +36,3 @@ class ConfiguracaoProva {
     this.tamanhoFonte = 14,
   });
 }
-
-/// Reexporta [Question] para quem importar só este arquivo já ter acesso
-/// ao model, sem precisar de dois imports.
-export '../question.dart';

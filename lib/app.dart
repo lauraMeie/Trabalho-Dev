@@ -4,7 +4,7 @@ import 'theme/app_theme.dart';
 import 'screens/login/login_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/turmas/turmas_screen.dart';
-import 'screens/questoes/banco_questoes_screen.dart';
+import 'screens/banco_questoes_screen.dart';
 import 'screens/provas/criar_prova_screen.dart';
 import 'screens/correcao/corrigir_prova_screen.dart';
 import 'screens/relatorios/relatorios_screen.dart';

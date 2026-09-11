@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
   AppColors._();
@@ -50,18 +51,18 @@ class AppTheme {
       // Fundo geral do aplicativo
       scaffoldBackgroundColor: AppColors.background,
 
-      fontFamily: 'Roboto',
+      textTheme: GoogleFonts.poppinsTextTheme(),
     );
     return base.copyWith(
 
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
         elevation: 4,
         centerTitle: false,
 
-        titleTextStyle: TextStyle(
-          color: Color(0xFF2E2545),
+        titleTextStyle: GoogleFonts.poppins(
+          color: const Color(0xFF2E2545),
           fontSize: 20,
           fontWeight: FontWeight.w600,
         ),
@@ -70,19 +71,19 @@ class AppTheme {
 
       textTheme: base.textTheme.copyWith(
 
-        headlineSmall: const TextStyle(
+        headlineSmall: GoogleFonts.poppins(
           fontSize: 24,
           fontWeight: FontWeight.bold,
           color: AppColors.textPrimary,
         ),
 
-        titleMedium: const TextStyle(
+        titleMedium: GoogleFonts.poppins(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
         ),
 
-        bodyMedium: const TextStyle(
+        bodyMedium: GoogleFonts.poppins(
           fontSize: 14,
           color: AppColors.textSecondary,
         ),
@@ -106,7 +107,7 @@ class AppTheme {
             ),
           ),
 
-          textStyle: const TextStyle(
+          textStyle: GoogleFonts.poppins(
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),

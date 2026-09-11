@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/menu_tile.dart';
 import '../../widgets/stat_badge.dart';
 import '../../widgets/side_nav_bar.dart';
+import '../../widgets/background_texture.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -27,18 +29,23 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      
+
       drawer: isWide ? null : const Drawer(width: 260, child: SideNavBar()),
-      body: SafeArea(
-        child: isWide
-            ? Row(
-                children: [
-                  const SideNavBar(),
-                  const VerticalDivider(width: 1, color: AppColors.border),
-                  Expanded(child: _HomeContent(context: context)),
-                ],
-              )
-            : _HomeContent(context: context),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: AppBackgroundTexture()),
+          SafeArea(
+            child: isWide
+                ? Row(
+                    children: [
+                      const SideNavBar(),
+                      const VerticalDivider(width: 1, color: AppColors.border),
+                      Expanded(child: _HomeContent(context: context)),
+                    ],
+                  )
+                : _HomeContent(context: context),
+          ),
+        ],
       ),
     );
   }
@@ -56,7 +63,8 @@ class _HomeContent extends StatelessWidget {
   Widget build(BuildContext _) {
     final isNarrow = MediaQuery.of(context).size.width < 800;
 
-    return Column(
+    return SingleChildScrollView(
+      child: Column(
       children: [
         Container(
           width: double.infinity,
@@ -69,44 +77,44 @@ class _HomeContent extends StatelessWidget {
             right: AppSpacing.lg,
             top: AppSpacing.lg,
           ),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(AppRadius.card),
-          ),
-          clipBehavior: Clip.antiAlias,
           child: Stack(
             children: [
-              // Círculo decorativo, ao fundo, canto superior esquerdo.
-              Positioned(
-                left: -30,
-                top: -30,
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.06),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              // Grade de pontinhos decorativa, canto inferior direito.
-              const Positioned(
-                right: 8,
-                bottom: 8,
-                child: _DotsGrid(),
-              ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    width: 56,
-                    height: 56,
-                    alignment: Alignment.center,
+                    width: 90,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 14, horizontal: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Text('👋', style: TextStyle(fontSize: 26)),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.description_outlined,
+                              color: Colors.white, size: 18),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'ProvaLab',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
@@ -130,122 +138,92 @@ class _HomeContent extends StatelessWidget {
             ],
           ),
         ),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.card),
-                    side: const BorderSide(
-                        color: AppColors.border, width: 1.5),
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  side: const BorderSide(
+                      color: AppColors.border, width: 1.5),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.md,
+                    horizontal: AppSpacing.sm,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.md,
-                      horizontal: AppSpacing.sm,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: const [
-                        StatBadge(value: '3', label: 'Turmas'),
-                        StatBadge(value: '120', label: 'Alunos'),
-                        StatBadge(value: '15', label: 'Provas'),
-                      ],
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: const [
+                      StatBadge(value: '3', label: 'Turmas'),
+                      StatBadge(value: '120', label: 'Alunos'),
+                      StatBadge(value: '15', label: 'Provas'),
+                    ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  'Menu principal',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                LayoutBuilder(
-                  builder: (context, gridConstraints) {
-                    final isNarrow = gridConstraints.maxWidth < 420;
-                    return GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: isNarrow ? 2 : 3,
-                      crossAxisSpacing: AppSpacing.sm,
-                      mainAxisSpacing: AppSpacing.sm,
-                      childAspectRatio: isNarrow ? 1.0 : 0.9,
-                      children: [
-                        MenuTile(
-                          icon: Icons.groups_outlined,
-                          title: 'Turmas',
-                          subtitle: 'Gerencie suas turmas e alunos',
-                          onTap: () => Navigator.of(context)
-                              .pushNamed(AppRoutes.turmas),
-                        ),
-                        MenuTile(
-                          icon: Icons.quiz_outlined,
-                          title: 'Banco de Questões',
-                          subtitle: 'Cadastre e organize questões',
-                          onTap: () => Navigator.of(context)
-                              .pushNamed(AppRoutes.bancoQuestoes),
-                        ),
-                        MenuTile(
-                          icon: Icons.edit_document,
-                          title: 'Criar Prova',
-                          subtitle: 'Monte uma nova avaliação',
-                          onTap: () => Navigator.of(context)
-                              .pushNamed(AppRoutes.criarProva),
-                        ),
-                        MenuTile(
-                          icon: Icons.fact_check_outlined,
-                          title: 'Corrigir Prova',
-                          subtitle: 'Correção automatizada das provas',
-                          onTap: () => Navigator.of(context)
-                              .pushNamed(AppRoutes.corrigirProva),
-                        ),
-                        MenuTile(
-                          icon: Icons.bar_chart_outlined,
-                          title: 'Relatórios',
-                          subtitle: 'Acompanhe os resultados',
-                          onTap: () => Navigator.of(context)
-                              .pushNamed(AppRoutes.relatorios),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Menu principal',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              LayoutBuilder(
+                builder: (context, gridConstraints) {
+                  final isNarrow = gridConstraints.maxWidth < 420;
+                  return GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 1,
+                    crossAxisSpacing: AppSpacing.sm,
+                    mainAxisSpacing: AppSpacing.sm,
+                    childAspectRatio: isNarrow ? 2.6 : 4.2,
+                    children: [
+                      MenuTile(
+                        icon: Icons.groups_outlined,
+                        title: 'Turmas',
+                        subtitle: 'Gerencie suas turmas e alunos',
+                        onTap: () => Navigator.of(context)
+                            .pushNamed(AppRoutes.turmas),
+                      ),
+                      MenuTile(
+                        icon: Icons.quiz_outlined,
+                        title: 'Banco de Questões',
+                        subtitle: 'Cadastre e organize questões',
+                        onTap: () => Navigator.of(context)
+                            .pushNamed(AppRoutes.bancoQuestoes),
+                      ),
+                      MenuTile(
+                        icon: Icons.edit_document,
+                        title: 'Criar Prova',
+                        subtitle: 'Monte uma nova avaliação',
+                        onTap: () => Navigator.of(context)
+                            .pushNamed(AppRoutes.criarProva),
+                      ),
+                      MenuTile(
+                        icon: Icons.fact_check_outlined,
+                        title: 'Corrigir Prova',
+                        subtitle: 'Correção automatizada das provas',
+                        onTap: () => Navigator.of(context)
+                            .pushNamed(AppRoutes.corrigirProva),
+                      ),
+                      MenuTile(
+                        icon: Icons.bar_chart_outlined,
+                        title: 'Relatórios',
+                        subtitle: 'Acompanhe os resultados',
+                        onTap: () => Navigator.of(context)
+                            .pushNamed(AppRoutes.relatorios),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Pequena grade de pontinhos decorativos, usada no fundo da faixa
-/// de boas-vindas.
-class _DotsGrid extends StatelessWidget {
-  const _DotsGrid();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 60,
-      height: 60,
-      child: GridView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          crossAxisSpacing: 6,
-          mainAxisSpacing: 6,
-        ),
-        itemCount: 16,
-        itemBuilder: (context, index) => Container(
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.2),
-            shape: BoxShape.circle,
-          ),
-        ),
       ),
     );
   }
