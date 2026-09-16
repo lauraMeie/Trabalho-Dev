@@ -1,14 +1,5 @@
 import '../models/prova_config.dart';
 
-/// Dados fictícios para a Fase N1 (sem persistência real).
-/// Servem para popular a tela de Criar Prova sem depender de banco de dados.
-///
-/// Usa o model [Question] definido em lib/models/question.dart (Banco de Questões).
-/// Atenção: nesse model toda questão tem sempre 5 alternativas (A a E).
-///
-/// As turmas NÃO são definidas aqui: usamos a lista oficial `turmasMock`
-/// de lib/data/turmas_mock.dart, para não ter dois bancos de turmas
-/// diferentes no app.
 
 final List<Question> mockQuestoes = [
   const Question(
