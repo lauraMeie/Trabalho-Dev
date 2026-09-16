@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'routes/app_routes.dart';
 import 'theme/app_theme.dart';
+import 'widgets/background_texture.dart';
 import 'screens/login/login_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/turmas/turmas_screen.dart';
@@ -27,6 +28,14 @@ class ProvaLab extends StatelessWidget {
         AppRoutes.criarProva: (context) => const CriarProvaScreen(),
         AppRoutes.corrigirProva: (context) => const CorrigirProvaScreen(),
         AppRoutes.relatorios: (context) => const RelatoriosScreen(),
+      },
+      builder: (context, child) {
+        return Stack(
+          children: [
+            const Positioned.fill(child: AppBackgroundTexture()),
+            ?child,
+          ],
+        );
       },
     );
   }

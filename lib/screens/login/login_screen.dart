@@ -12,86 +12,145 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  width: 72,
-                  height: 72,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.primary, AppColors.primaryDark],
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ClipPath(
+              clipper: _TopCurveClipper(),
+              child: Container(
+                height: 240,
+                width: double.infinity,
+                color: AppColors.primary,
+                padding: const EdgeInsets.only(bottom: 40),
+                child: SafeArea(
+                  bottom: false,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.school_outlined,
+                            color: Colors.white, size: 40),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'ProvaLab',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(color: Colors.white),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          'Entre para gerenciar suas avaliações.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.85)),
+                        ),
+                      ],
                     ),
-                    borderRadius: BorderRadius.circular(AppRadius.card),
                   ),
-                  child: const Icon(Icons.school_outlined,
-                      color: Colors.white, size: 36),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  'Provas App',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Entre para gerenciar suas avaliações.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: AppSpacing.xl),
+              ),
+            ),
 
-                const TextField(
-                  decoration: InputDecoration(
-                    labelText: 'E-mail',
-                    prefixIcon: Icon(Icons.mail_outline),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.lg,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const TextField(
+                    decoration: InputDecoration(
+                      hintText: 'seu@email.com',
+                      prefixIcon: Icon(Icons.mail_outline),
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                const TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Senha',
-                    prefixIcon: Icon(Icons.lock_outline),
+                  const SizedBox(height: AppSpacing.sm),
+                  const TextField(
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      hintText: 'Senha',
+                      prefixIcon: Icon(Icons.lock_outline),
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.sm),
 
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context)
-                      .pushReplacementNamed(AppRoutes.home),
-                  child: const Text('Entrar'),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xs,
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'Esqueci minha senha',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(AppRadius.button),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(context)
+                        .pushReplacementNamed(AppRoutes.home),
+                    child: const Text('Entrar'),
                   ),
-                  child: const Text(
+                  const SizedBox(height: AppSpacing.sm),
+
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(context)
+                        .pushReplacementNamed(AppRoutes.home),
+                    child: const Text('Criar conta'),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  Text(
                     'Tela mock (N1) — login real será implementado depois',
-                    style: TextStyle(
-                        fontSize: 12, color: AppColors.textSecondary),
+                    style:
+                        TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     textAlign: TextAlign.center,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
+}
+
+/// Curva simples e arredondada na base do cabeçalho roxo.
+class _TopCurveClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height - 36);
+    path.quadraticBezierTo(
+      size.width / 2,
+      size.height,
+      size.width,
+      size.height - 36,
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

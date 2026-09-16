@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/menu_tile.dart';
@@ -66,76 +65,57 @@ class _HomeContent extends StatelessWidget {
     return SingleChildScrollView(
       child: Column(
       children: [
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: isNarrow ? AppSpacing.xs : AppSpacing.sm,
-          ),
-          margin: const EdgeInsets.only(
-            left: AppSpacing.lg,
-            right: AppSpacing.lg,
-            top: AppSpacing.lg,
-          ),
-          child: Stack(
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 90,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 14, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.description_outlined,
-                              color: Colors.white, size: 18),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'ProvaLab',
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
+        ClipPath(
+          clipper: _TopCurveClipper(),
+          child: Container(
+            width: double.infinity,
+            color: AppColors.primary,
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              isNarrow ? AppSpacing.md : AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.xl + AppSpacing.sm,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Bem vindo!',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          'Hora de gerenciar suas avaliações de forma simples e rápida.',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
+                  child: const Icon(Icons.description_outlined,
+                      color: Colors.white, size: 22),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Bem vindo!',
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineSmall
+                            ?.copyWith(color: Colors.white),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Hora de gerenciar suas avaliações de forma simples e rápida.',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.85)),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
         Padding(
@@ -231,4 +211,25 @@ class _HomeContent extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Curva simples e arredondada na base da faixa de boas-vindas.
+class _TopCurveClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height - 28);
+    path.quadraticBezierTo(
+      size.width / 2,
+      size.height,
+      size.width,
+      size.height - 28,
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
