@@ -5,12 +5,10 @@ import '../models/prova_config.dart';
 ///
 /// Usa o model [Question] definido em lib/models/question.dart (Banco de Questões).
 /// Atenção: nesse model toda questão tem sempre 5 alternativas (A a E).
-
-final List<Turma> mockTurmas = [
-  const Turma(id: 't1', nome: '3º Ano A - Matemática', numAlunos: 32),
-  const Turma(id: 't2', nome: '2º Ano B - Ciências', numAlunos: 28),
-  const Turma(id: 't3', nome: '1º Ano C - Geografia', numAlunos: 30),
-];
+///
+/// As turmas NÃO são definidas aqui: usamos a lista oficial `turmasMock`
+/// de lib/data/turmas_mock.dart, para não ter dois bancos de turmas
+/// diferentes no app.
 
 final List<Question> mockQuestoes = [
   const Question(
