@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../../data/turmas_mock.dart';
 import '../../models/turma.dart';
 import '../../theme/app_theme.dart';
+import 'cadastro_turma_screen.dart';
 import 'turma_detalhe_screen.dart';
 
-/// Tela de lista de turmas (MOCK — N1).
-/// Mostra as turmas fictícias e navega para o detalhe de cada uma.
+/// Tela de lista de turmas (MOCK — N1), com CRUD completo de turmas.
 class TurmasScreen extends StatefulWidget {
   const TurmasScreen({super.key});
 
@@ -20,6 +20,39 @@ class _TurmasScreenState extends State<TurmasScreen> {
   void initState() {
     super.initState();
     _turmas = turmasMock;
+  }
+
+  Future<void> _abrirCadastroTurma() async {
+    final novaTurma = await Navigator.of(context).push<Turma>(
+      MaterialPageRoute(builder: (_) => const CadastroTurmaScreen()),
+    );
+    if (novaTurma != null) {
+      setState(() => _turmas.add(novaTurma));
+    }
+  }
+
+  Future<void> _editarTurma(Turma turma) async {
+    final alterou = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => CadastroTurmaScreen(turmaParaEditar: turma)),
+    );
+    if (alterou == true) setState(() {});
+  }
+
+  Future<void> _excluirTurma(Turma turma) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Excluir turma'),
+        content: Text('Tem certeza que deseja excluir "${turma.nome}" e todos os seus alunos?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Excluir')),
+        ],
+      ),
+    );
+    if (confirmar == true) {
+      setState(() => _turmas.remove(turma));
+    }
   }
 
   @override
@@ -51,12 +84,19 @@ class _TurmasScreenState extends State<TurmasScreen> {
                     ),
                     title: Text(turma.nome, style: Theme.of(context).textTheme.titleMedium),
                     subtitle: Text('${turma.quantidadeAlunos} aluno(s)'),
-                    trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (valor) {
+                        if (valor == 'editar') _editarTurma(turma);
+                        if (valor == 'excluir') _excluirTurma(turma);
+                      },
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(value: 'editar', child: Text('Editar')),
+                        PopupMenuItem(value: 'excluir', child: Text('Excluir')),
+                      ],
+                    ),
                     onTap: () async {
                       await Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => TurmaDetalheScreen(turma: turma),
-                        ),
+                        MaterialPageRoute(builder: (_) => TurmaDetalheScreen(turma: turma)),
                       );
                       setState(() {}); // atualiza a contagem de alunos ao voltar
                     },
@@ -64,6 +104,11 @@ class _TurmasScreenState extends State<TurmasScreen> {
                 );
               },
             ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _abrirCadastroTurma,
+        icon: const Icon(Icons.add),
+        label: const Text('Nova turma'),
+      ),
     );
   }
 }

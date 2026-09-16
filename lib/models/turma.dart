@@ -1,7 +1,7 @@
 import 'aluno.dart';
 
 class Turma {
-  final String nome;
+  String nome;
   final List<Aluno> alunos;
 
   Turma(this.nome, this.alunos);
