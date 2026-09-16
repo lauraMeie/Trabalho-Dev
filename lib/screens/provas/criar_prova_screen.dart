@@ -4,19 +4,7 @@ import '../../data/mock_questoes.dart';
 import '../../data/turmas_mock.dart';
 import '../../models/prova_config.dart';
 
-/// Tela "Criar Prova" (Fase N1 - dados mock, sem persistência real).
-///
-/// Cobre os requisitos:
-/// - RF01: montar a prova a partir do banco de questões
-/// - RF03: randomizar ordem das questões e alternativas
-/// - RF04: escolher mesma prova para todos ou provas diferentes por aluno
-/// - RF14: editar o layout da prova gerada
-///
-/// Organizada em 4 etapas (Stepper): selecionar questões, configurar
-/// prova, embaralhamento e tela da prova (preview final).
-///
-/// Usa o model [Question] (lib/models/question.dart) do Banco de Questões,
-/// onde toda questão tem sempre 5 alternativas (A a E).
+
 class CriarProvaScreen extends StatefulWidget {
   const CriarProvaScreen({super.key});
 
