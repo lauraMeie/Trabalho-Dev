@@ -1,22 +1,10 @@
-// Reexporta Question para quem importar só este arquivo já ter acesso
-// ao model, sem precisar de dois imports.
+
+import 'turma.dart';
+
 export 'question.dart';
+export 'turma.dart';
 
-/// Representa uma turma (usada aqui só para vincular a prova a uma turma;
-/// o cadastro completo de turmas fica a cargo da tela "Turmas").
-class Turma {
-  final String id;
-  final String nome;
-  final int numAlunos;
 
-  const Turma({
-    required this.id,
-    required this.nome,
-    required this.numAlunos,
-  });
-}
-
-/// Configuração escolhida pelo professor ao montar a prova.
 class ConfiguracaoProva {
   String nome;
   Turma? turma;
