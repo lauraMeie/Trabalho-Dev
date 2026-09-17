@@ -1,48 +1,46 @@
 import 'package:flutter/material.dart';
-import '../../models/aluno.dart';
+import '../../models/turma.dart';
 import '../../theme/app_theme.dart';
 
-/// Tela de cadastro/edição de aluno (MOCK — N1).
-/// Se `alunoParaEditar` for informado, a tela entra em modo de edição.
-class CadastroAlunoScreen extends StatefulWidget {
-  final Aluno? alunoParaEditar;
+/// Tela de cadastro/edição de turma (MOCK — N1).
+/// Se `turmaParaEditar` for informado, a tela entra em modo de edição.
+class CadastroTurmaScreen extends StatefulWidget {
+  final Turma? turmaParaEditar;
 
-  const CadastroAlunoScreen({super.key, this.alunoParaEditar});
+  const CadastroTurmaScreen({super.key, this.turmaParaEditar});
 
   @override
-  State<CadastroAlunoScreen> createState() => _CadastroAlunoScreenState();
+  State<CadastroTurmaScreen> createState() => _CadastroTurmaScreenState();
 }
 
-class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
+class _CadastroTurmaScreenState extends State<CadastroTurmaScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nomeController;
-  late final TextEditingController _matriculaController;
 
-  bool get _editando => widget.alunoParaEditar != null;
+  bool get _editando => widget.turmaParaEditar != null;
 
   @override
   void initState() {
     super.initState();
-    _nomeController = TextEditingController(text: widget.alunoParaEditar?.nome ?? '');
-    _matriculaController = TextEditingController(text: widget.alunoParaEditar?.matricula ?? '');
+    _nomeController = TextEditingController(text: widget.turmaParaEditar?.nome ?? '');
   }
 
   @override
   void dispose() {
     _nomeController.dispose();
-    _matriculaController.dispose();
     super.dispose();
   }
 
   void _salvar() {
     if (_formKey.currentState!.validate()) {
       if (_editando) {
-        widget.alunoParaEditar!.nome = _nomeController.text.trim();
-        widget.alunoParaEditar!.matricula = _matriculaController.text.trim();
+        // edição: altera o objeto existente e avisa a tela anterior pra atualizar
+        widget.turmaParaEditar!.nome = _nomeController.text.trim();
         Navigator.of(context).pop(true);
       } else {
-        final aluno = Aluno(_nomeController.text.trim(), _matriculaController.text.trim());
-        Navigator.of(context).pop(aluno);
+        // criação: devolve uma turma nova
+        final turma = Turma(_nomeController.text.trim(), []);
+        Navigator.of(context).pop(turma);
       }
     }
   }
@@ -50,7 +48,7 @@ class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_editando ? 'Editar aluno' : 'Cadastrar aluno')),
+      appBar: AppBar(title: Text(_editando ? 'Editar turma' : 'Cadastrar turma')),
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Form(
@@ -61,21 +59,12 @@ class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
               TextFormField(
                 controller: _nomeController,
                 decoration: const InputDecoration(
-                  labelText: 'Nome do aluno',
-                  prefixIcon: Icon(Icons.person_outline),
+                  labelText: 'Nome da turma',
+                  hintText: 'Ex.: 3º Ano C - ADS',
+                  prefixIcon: Icon(Icons.groups_outlined),
                 ),
                 validator: (value) =>
-                    (value == null || value.trim().isEmpty) ? 'Informe o nome' : null,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _matriculaController,
-                decoration: const InputDecoration(
-                  labelText: 'Matrícula',
-                  prefixIcon: Icon(Icons.badge_outlined),
-                ),
-                validator: (value) =>
-                    (value == null || value.trim().isEmpty) ? 'Informe a matrícula' : null,
+                    (value == null || value.trim().isEmpty) ? 'Informe o nome da turma' : null,
               ),
               const SizedBox(height: AppSpacing.lg),
               ElevatedButton(
@@ -93,7 +82,7 @@ class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.button),
                 ),
                 child: const Text(
-                  'Tela mock (N1) — cadastro fica só em memória, ainda sem banco de dados',
+                  'Tela mock (N1) — turma fica só em memória, ainda sem banco de dados',
                   style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
