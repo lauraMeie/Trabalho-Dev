@@ -90,3 +90,6 @@ Nesta fase (N1), o aplicativo contempla:
 
 1. Instale o Flutter SDK: https://docs.flutter.dev/get-started/install
 2. Verifique a instalação:
+3. Rode flutter run -d chrome.
+
+Link do vídeo das nossas telas: https://youtube.com/shorts/PHKnWtK98DI?feature=share
