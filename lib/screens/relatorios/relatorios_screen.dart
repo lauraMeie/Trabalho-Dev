@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../data/mock_corrections_store.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/grafico_desempenho.dart';
 import '../../widgets/stat_badge.dart';
 import '../correcao/qrcode_mock_screen.dart';
 
@@ -55,6 +56,20 @@ class RelatoriosScreen extends StatelessWidget {
                           label: 'Turmas',
                         ),
                       ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  'Desempenho por matéria',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: GraficoDesempenho(
+                      dados: MockCorrectionsStore.desempenhoPorMateria(),
                     ),
                   ),
                 ),
