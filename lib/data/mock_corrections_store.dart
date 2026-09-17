@@ -90,6 +90,29 @@ class MockCorrectionsStore {
     return mapa.values.toList();
   }
 
+  /// Percentual de acerto (0.0 a 1.0) agrupado por matéria, considerando
+  /// todas as respostas de todas as provas já corrigidas na sessão.
+  static Map<String, double> desempenhoPorMateria() {
+    final Map<String, int> acertosPorMateria = {};
+    final Map<String, int> totalPorMateria = {};
+
+    for (final resultado in _resultados) {
+      for (final resposta in resultado.respostas) {
+        totalPorMateria[resposta.materia] =
+            (totalPorMateria[resposta.materia] ?? 0) + 1;
+        if (resposta.correta) {
+          acertosPorMateria[resposta.materia] =
+              (acertosPorMateria[resposta.materia] ?? 0) + 1;
+        }
+      }
+    }
+
+    return {
+      for (final materia in totalPorMateria.keys)
+        materia: (acertosPorMateria[materia] ?? 0) / totalPorMateria[materia]!,
+    };
+  }
+
   static List<ResultadoCorrecao> _seed() {
     return List.generate(3, (_) {
       final identificacao = CorrectionSimulator.simularEscaneamentoQrCode();
