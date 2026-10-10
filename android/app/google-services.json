@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "735994634722",
+    "project_id": "trabalho-dev-banco-de-dados",
+    "storage_bucket": "trabalho-dev-banco-de-dados.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:735994634722:android:4b20082c1c3fd9a19399bb",
+        "android_client_info": {
+          "package_name": "com.example.nome_do_projeto"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAt-Wi0zGD-igxRhEn8xxscbjp2mT03YKI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
