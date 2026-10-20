@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
-import '../../data/turmas_mock.dart';
 import '../../models/prova_config.dart';
 import '../../models/prova_gerada.dart';
+import '../../services/prova_pdf_service.dart';
 import '../../services/prova_repository.dart';
 import '../../services/question_repository.dart';
+import '../../services/turma_leitura_repository.dart';
 import '../../utils/exam_generator.dart';
 import '../../utils/firestore_errors.dart';
+import '../../utils/prova_validator.dart';
 
 
 class CriarProvaScreen extends StatefulWidget {
@@ -21,13 +25,31 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
 
   final QuestionRepository _questionRepository = QuestionRepository();
   final ProvaRepository _provaRepository = ProvaRepository();
+  final TurmaLeituraRepository _turmaRepository = TurmaLeituraRepository();
+
+  /// Tempo máximo esperando o Firestore responder uma LEITURA. Sem
+  /// internet, o Firestore pode ficar pendente em vez de dar erro.
+  static const Duration _tempoLimiteLeitura = Duration(seconds: 10);
 
   // Questões vindas do Firestore (Banco de Questões).
   List<Question> _bancoQuestoes = const [];
   bool _carregandoQuestoes = true;
   String? _erroQuestoes;
 
+  // Turmas vindas do Firestore (coleção `turmas`).
+  List<Turma> _turmas = const [];
+  bool _carregandoTurmas = true;
+  String? _erroTurmas;
+
   bool _salvando = false;
+  bool _gerandoPdf = false;
+
+  // Só mostra os erros de validação nos campos depois que o professor
+  // tenta avançar (para não "gritar" com a tela ainda vazia).
+  bool _mostrarErros = false;
+
+  // Última prova salva com sucesso (usada para gerar o PDF dela).
+  ProvaGerada? _provaSalva;
 
   // Prova que o professor está vendo na etapa 4. É gerada UMA vez ao
   // entrar na etapa (e não a cada rebuild), para que o que aparece na
@@ -44,6 +66,17 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
   void initState() {
     super.initState();
     _carregarQuestoes();
+    _carregarTurmas();
+  }
+
+  /// Mensagem de erro para LEITURAS (a de `mensagemDeErro` fala em
+  /// "alteração será enviada", que só faz sentido para gravações).
+  String _mensagemLeitura(Object erro) {
+    if (erro is TimeoutException) {
+      return 'Sem conexão com o servidor. Verifique sua internet e '
+          'tente novamente.';
+    }
+    return mensagemDeErro(erro);
   }
 
   Future<void> _carregarQuestoes() async {
@@ -52,17 +85,52 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
       _erroQuestoes = null;
     });
     try {
-      final questoes = await _questionRepository.buscarTodas();
+      final questoes = await _questionRepository
+          .buscarTodas()
+          .timeout(_tempoLimiteLeitura);
       if (!mounted) return;
       setState(() {
         _bancoQuestoes = questoes;
+        // Descarta seleções de questões que não existem mais no banco.
+        final idsExistentes = questoes.map((q) => q.id).toSet();
+        _questoesSelecionadasIds.removeWhere((id) => !idsExistentes.contains(id));
         _carregandoQuestoes = false;
       });
     } catch (erro) {
       if (!mounted) return;
       setState(() {
-        _erroQuestoes = mensagemDeErro(erro);
+        _erroQuestoes = _mensagemLeitura(erro);
         _carregandoQuestoes = false;
+      });
+    }
+  }
+
+  Future<void> _carregarTurmas() async {
+    setState(() {
+      _carregandoTurmas = true;
+      _erroTurmas = null;
+    });
+    try {
+      final turmas =
+          await _turmaRepository.buscarTodas().timeout(_tempoLimiteLeitura);
+      if (!mounted) return;
+      setState(() {
+        _turmas = turmas;
+        // Os objetos Turma são novos a cada leitura; refaz a seleção
+        // pelo nome para o Dropdown não ficar com um valor "órfão".
+        final nomeSelecionado = _config.turma?.nome;
+        _config.turma = null;
+        for (final turma in turmas) {
+          if (turma.nome == nomeSelecionado) _config.turma = turma;
+        }
+        _carregandoTurmas = false;
+      });
+    } catch (erro) {
+      if (!mounted) return;
+      debugPrint('Erro ao carregar turmas: $erro');
+      setState(() {
+        _erroTurmas = _mensagemLeitura(erro);
+        _carregandoTurmas = false;
       });
     }
   }
@@ -96,16 +164,49 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
     super.dispose();
   }
 
-  bool _podeAvancar(int etapa) {
+  // ---------------------------------------------------------------------
+  // Validação da configuração da prova
+  // ---------------------------------------------------------------------
+  ProvaValidationResult get _validacao => ProvaValidator.validar(
+        nome: _nomeProvaController.text,
+        turma: _config.turma,
+        quantidadeQuestoes: _questoesSelecionadas.length,
+        mesmaProvaParaTodos: _config.mesmaProvaParaTodos,
+      );
+
+  /// Mensagem do primeiro problema da etapa, ou `null` se está tudo OK.
+  String? _erroDaEtapa(int etapa) {
+    final v = _validacao;
     switch (etapa) {
       case 0:
-        return _questoesSelecionadasIds.isNotEmpty;
+        return v.erroQuestoes;
       case 1:
-        return _nomeProvaController.text.trim().isNotEmpty &&
-            _config.turma != null;
+        return v.erroNome ?? v.erroTurma ?? v.erroAlunos;
       default:
-        return true;
+        return null;
     }
+  }
+
+  /// Primeira etapa (a partir da atual, até antes de [destino]) com
+  /// problema, ou `null` se dá para ir até [destino].
+  int? _etapaComErro(int destino) {
+    for (int etapa = _etapaAtual; etapa < destino; etapa++) {
+      if (_erroDaEtapa(etapa) != null) return etapa;
+    }
+    return null;
+  }
+
+  void _irParaEtapa(int etapa) {
+    _etapaAtual = etapa;
+    _mostrarErros = false;
+    if (etapa < 3) _provaSalva = null;
+    if (etapa == 3) _gerarPreview();
+  }
+
+  void _avisar(String mensagem) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(mensagem)));
   }
 
   @override
@@ -119,40 +220,40 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
       body: Stepper(
         currentStep: _etapaAtual,
         onStepTapped: (step) {
-          // Só permite pular para uma etapa se as anteriores estiverem OK.
-          if (step <= _etapaAtual || _podeAvancar(_etapaAtual)) {
-            setState(() {
-              _etapaAtual = step;
-              if (step == 3) _gerarPreview();
-            });
+          // Só permite pular para uma etapa se TODAS as anteriores
+          // (até ela) estiverem válidas.
+          final etapaComErro = _etapaComErro(step);
+          if (etapaComErro == null) {
+            setState(() => _irParaEtapa(step));
+          } else {
+            setState(() => _mostrarErros = true);
+            _avisar(_erroDaEtapa(etapaComErro)!);
           }
         },
         onStepContinue: () {
-          if (!_podeAvancar(_etapaAtual)) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Complete esta etapa antes de continuar.'),
-              ),
-            );
+          final erro = _erroDaEtapa(_etapaAtual);
+          if (erro != null) {
+            setState(() => _mostrarErros = true);
+            _avisar(erro);
             return;
           }
           if (_etapaAtual < 3) {
-            setState(() {
-              _etapaAtual += 1;
-              if (_etapaAtual == 3) _gerarPreview();
-            });
+            setState(() => _irParaEtapa(_etapaAtual + 1));
           }
         },
         onStepCancel: () {
           if (_etapaAtual > 0) {
-            setState(() => _etapaAtual -= 1);
+            setState(() => _irParaEtapa(_etapaAtual - 1));
           }
         },
         controlsBuilder: (context, details) {
           final ultimaEtapa = _etapaAtual == 3;
           return Padding(
             padding: const EdgeInsets.only(top: 16),
-            child: Row(
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 if (!ultimaEtapa)
                   FilledButton(
@@ -161,8 +262,9 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
                   )
                 else
                   FilledButton.icon(
-                    onPressed:
-                        _salvando ? null : () => _gerarESalvarProva(context),
+                    onPressed: (_salvando || _provaSalva != null)
+                        ? null
+                        : () => _gerarESalvarProva(context),
                     icon: _salvando
                         ? const SizedBox(
                             width: 16,
@@ -170,9 +272,33 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.check),
-                    label: Text(_salvando ? 'Salvando...' : 'Gerar Prova'),
+                    label: Text(
+                      _salvando
+                          ? 'Salvando...'
+                          : (_provaSalva != null
+                              ? 'Prova salva'
+                              : 'Gerar Prova'),
+                    ),
                   ),
-                const SizedBox(width: 12),
+                if (ultimaEtapa && _provaSalva != null) ...[
+                  OutlinedButton.icon(
+                    onPressed: _gerandoPdf ? null : () => _exportarPdf(),
+                    icon: _gerandoPdf
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.print_outlined),
+                    label: Text(_gerandoPdf ? 'Gerando PDF...' : 'Imprimir PDF'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed:
+                        _gerandoPdf ? null : () => _exportarPdf(baixar: true),
+                    icon: const Icon(Icons.download_outlined),
+                    label: const Text('Baixar PDF'),
+                  ),
+                ],
                 if (_etapaAtual > 0)
                   TextButton(
                     onPressed: details.onStepCancel,
@@ -237,9 +363,19 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
     }
 
     if (_bancoQuestoes.isEmpty) {
-      return const Text(
-        'O Banco de Questões está vazio. Cadastre questões no Banco de '
-        'Questões antes de criar uma prova.',
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'O Banco de Questões está vazio. Cadastre questões no Banco de '
+            'Questões antes de criar uma prova.',
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: _carregarQuestoes,
+            child: const Text('Atualizar'),
+          ),
+        ],
       );
     }
 
@@ -256,6 +392,14 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
                 fontWeight: FontWeight.w600,
               ),
         ),
+        if (_mostrarErros && _validacao.erroQuestoes != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              _validacao.erroQuestoes!,
+              style: TextStyle(color: colorScheme.error),
+            ),
+          ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -317,30 +461,17 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
       children: [
         TextField(
           controller: _nomeProvaController,
-          decoration: const InputDecoration(
+          maxLength: ProvaValidator.tamanhoMaximoNome,
+          decoration: InputDecoration(
             labelText: 'Nome da prova',
             hintText: 'Ex: Avaliação Bimestral - Matemática',
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
+            errorText: _mostrarErros ? _validacao.erroNome : null,
           ),
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 16),
-        DropdownButtonFormField<Turma>(
-          initialValue: _config.turma,
-          decoration: const InputDecoration(
-            labelText: 'Turma',
-            border: OutlineInputBorder(),
-          ),
-          items: turmasMock
-              .map(
-                (t) => DropdownMenuItem(
-                  value: t,
-                  child: Text('${t.nome} (${t.quantidadeAlunos} alunos)'),
-                ),
-              )
-              .toList(),
-          onChanged: (turma) => setState(() => _config.turma = turma),
-        ),
+        _buildCampoTurma(),
         const SizedBox(height: 16),
         Card(
           margin: EdgeInsets.zero,
@@ -378,7 +509,86 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
             ),
           ),
         ),
+        if (_validacao.erroAlunos != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              _validacao.erroAlunos!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
       ],
+    );
+  }
+
+  /// Campo "Turma": mostra carregando, erro (com nova tentativa), lista
+  /// vazia ou o seletor, conforme o estado da leitura no Firestore.
+  Widget _buildCampoTurma() {
+    if (_carregandoTurmas) {
+      return const Row(
+        children: [
+          SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 12),
+          Text('Carregando turmas...'),
+        ],
+      );
+    }
+
+    if (_erroTurmas != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_erroTurmas!),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: _carregarTurmas,
+            child: const Text('Tentar novamente'),
+          ),
+        ],
+      );
+    }
+
+    if (_turmas.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Nenhuma turma cadastrada. Cadastre uma turma na tela Turmas '
+            'antes de criar uma prova.',
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: _carregarTurmas,
+            child: const Text('Atualizar'),
+          ),
+        ],
+      );
+    }
+
+    return DropdownButtonFormField<Turma>(
+      // A chave muda quando a lista é recarregada, para o campo
+      // reconstruir com o valor selecionado atualizado.
+      key: ObjectKey(_turmas),
+      initialValue: _config.turma,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: 'Turma',
+        border: const OutlineInputBorder(),
+        errorText: _mostrarErros ? _validacao.erroTurma : null,
+      ),
+      items: _turmas
+          .map(
+            (t) => DropdownMenuItem(
+              value: t,
+              child: Text('${t.nome} (${t.quantidadeAlunos} alunos)'),
+            ),
+          )
+          .toList(),
+      onChanged: (turma) => setState(() => _config.turma = turma),
     );
   }
 
@@ -523,12 +733,17 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
   Future<void> _gerarESalvarProva(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
 
-    if (_questoesSelecionadasIds.isEmpty ||
-        _nomeProvaController.text.trim().isEmpty ||
-        _config.turma == null) {
+    final validacao = _validacao;
+    if (!validacao.valido) {
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Preencha todas as etapas antes de gerar a prova.'),
+        SnackBar(
+          content: Text(
+            validacao.erroNome ??
+                validacao.erroTurma ??
+                validacao.erroQuestoes ??
+                validacao.erroAlunos ??
+                'Preencha todas as etapas antes de gerar a prova.',
+          ),
         ),
       );
       return;
@@ -544,16 +759,6 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
     if (_config.mesmaProvaParaTodos) {
       provas = [ProvaDoAluno(questoes: _previewQuestoes)];
     } else {
-      if (turma.alunos.isEmpty) {
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text(
-              'A turma não tem alunos para gerar provas individualizadas.',
-            ),
-          ),
-        );
-        return;
-      }
       provas = [
         for (final aluno in turma.alunos)
           ProvaDoAluno(
@@ -583,9 +788,12 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
     try {
       await _provaRepository.salvar(prova);
       if (!mounted) return;
-      setState(() => _salvando = false);
+      setState(() {
+        _salvando = false;
+        _provaSalva = prova;
+      });
 
-      await showDialog<void>(
+      final querPdf = await showDialog<bool>(
         context: this.context, // seguro: já checamos `mounted` acima
         builder: (dialogContext) => AlertDialog(
           title: const Text('Prova gerada'),
@@ -597,16 +805,48 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Ok'),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Fechar'),
+            ),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              label: const Text('Gerar PDF'),
             ),
           ],
         ),
       );
+
+      if (querPdf == true) await _exportarPdf();
     } catch (erro) {
       if (!mounted) return;
       setState(() => _salvando = false);
       messenger.showSnackBar(SnackBar(content: Text(mensagemDeErro(erro))));
+    }
+  }
+
+  /// Gera o PDF da prova que acabou de ser salva (imprimir ou baixar).
+  Future<void> _exportarPdf({bool baixar = false}) async {
+    final prova = _provaSalva;
+    if (prova == null || _gerandoPdf) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _gerandoPdf = true);
+    try {
+      if (baixar) {
+        await ProvaPdfService.baixar(prova);
+      } else {
+        await ProvaPdfService.imprimir(prova);
+      }
+    } catch (erro) {
+      debugPrint('Erro ao gerar PDF: $erro');
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível gerar o PDF. Tente novamente.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _gerandoPdf = false);
     }
   }
 }
