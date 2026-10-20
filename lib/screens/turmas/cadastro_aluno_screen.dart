@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import '../../data/turmas_repository.dart';
 import '../../models/aluno.dart';
 import '../../theme/app_theme.dart';
 
-/// Tela de cadastro/edição de aluno (MOCK — N1).
+/// Tela de cadastro/edição de aluno (N2 — grava no Firestore).
 /// Se `alunoParaEditar` for informado, a tela entra em modo de edição.
 class CadastroAlunoScreen extends StatefulWidget {
+  final String turmaId;
   final Aluno? alunoParaEditar;
 
-  const CadastroAlunoScreen({super.key, this.alunoParaEditar});
+  const CadastroAlunoScreen({
+    super.key,
+    required this.turmaId,
+    this.alunoParaEditar,
+  });
 
   @override
   State<CadastroAlunoScreen> createState() => _CadastroAlunoScreenState();
@@ -15,16 +21,22 @@ class CadastroAlunoScreen extends StatefulWidget {
 
 class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _repo = TurmasRepository();
   late final TextEditingController _nomeController;
   late final TextEditingController _matriculaController;
+  bool _salvando = false;
 
   bool get _editando => widget.alunoParaEditar != null;
 
   @override
   void initState() {
     super.initState();
-    _nomeController = TextEditingController(text: widget.alunoParaEditar?.nome ?? '');
-    _matriculaController = TextEditingController(text: widget.alunoParaEditar?.matricula ?? '');
+    _nomeController = TextEditingController(
+      text: widget.alunoParaEditar?.nome ?? '',
+    );
+    _matriculaController = TextEditingController(
+      text: widget.alunoParaEditar?.matricula ?? '',
+    );
   }
 
   @override
@@ -34,23 +46,40 @@ class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
     super.dispose();
   }
 
-  void _salvar() {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _salvar() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final nome = _nomeController.text.trim();
+    final matricula = _matriculaController.text.trim();
+    setState(() => _salvando = true);
+
+    try {
       if (_editando) {
-        widget.alunoParaEditar!.nome = _nomeController.text.trim();
-        widget.alunoParaEditar!.matricula = _matriculaController.text.trim();
-        Navigator.of(context).pop(true);
+        final original = widget.alunoParaEditar!;
+        await _repo.atualizarAluno(
+          widget.turmaId,
+          Aluno(nome, matricula, id: original.id),
+        );
       } else {
-        final aluno = Aluno(_nomeController.text.trim(), _matriculaController.text.trim());
-        Navigator.of(context).pop(aluno);
+        await _repo.criarAluno(widget.turmaId, Aluno(nome, matricula));
       }
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Não foi possível salvar o aluno: $e')),
+      );
+      if (mounted) setState(() => _salvando = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_editando ? 'Editar aluno' : 'Cadastrar aluno')),
+      appBar: AppBar(
+        title: Text(_editando ? 'Editar aluno' : 'Cadastrar aluno'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Form(
@@ -64,8 +93,9 @@ class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
                   labelText: 'Nome do aluno',
                   prefixIcon: Icon(Icons.person_outline),
                 ),
-                validator: (value) =>
-                    (value == null || value.trim().isEmpty) ? 'Informe o nome' : null,
+                validator: (value) => (value == null || value.trim().isEmpty)
+                    ? 'Informe o nome'
+                    : null,
               ),
               const SizedBox(height: AppSpacing.md),
               TextFormField(
@@ -74,29 +104,20 @@ class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
                   labelText: 'Matrícula',
                   prefixIcon: Icon(Icons.badge_outlined),
                 ),
-                validator: (value) =>
-                    (value == null || value.trim().isEmpty) ? 'Informe a matrícula' : null,
+                validator: (value) => (value == null || value.trim().isEmpty)
+                    ? 'Informe a matrícula'
+                    : null,
               ),
               const SizedBox(height: AppSpacing.lg),
               ElevatedButton(
-                onPressed: _salvar,
-                child: Text(_editando ? 'Salvar alterações' : 'Salvar'),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(AppRadius.button),
-                ),
-                child: const Text(
-                  'Tela mock (N1) — cadastro fica só em memória, ainda sem banco de dados',
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                  textAlign: TextAlign.center,
-                ),
+                onPressed: _salvando ? null : _salvar,
+                child: _salvando
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(_editando ? 'Salvar alterações' : 'Salvar'),
               ),
             ],
           ),
