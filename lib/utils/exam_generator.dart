@@ -23,6 +23,19 @@ class GeneratedQuestion {
 
   /// Letra da alternativa correta (A a E) já considerando o novo embaralhamento
   String get correctLetter => String.fromCharCode(65 + correctIndex);
+
+  /// Formato salvo no Firestore (a ordem já embaralhada é preservada,
+  /// para a correção automática conseguir conferir o gabarito depois).
+  Map<String, dynamic> toMap() {
+    return {
+      'originalId': originalId,
+      'subject': subject,
+      'statement': statement,
+      'alternatives': alternatives,
+      'correctIndex': correctIndex,
+      'correctLetter': correctLetter,
+    };
+  }
 }
 
 /// Responsável por "puxar" questões do banco e montar uma prova,
@@ -44,6 +57,24 @@ class ExamGenerator {
     return selecionadas.map(_embaralharAlternativas).toList();
   }
 
+  /// Monta uma prova a partir de uma lista JÁ ESCOLHIDA de questões
+  /// (as que o professor selecionou na tela Criar Prova), respeitando
+  /// as opções de embaralhamento (RF03).
+  static List<GeneratedQuestion> gerarDeQuestoes(
+    List<Question> questoes, {
+    bool embaralharQuestoes = false,
+    bool embaralharAlternativas = false,
+  }) {
+    final lista = List<Question>.from(questoes);
+    if (embaralharQuestoes) lista.shuffle(_random);
+
+    return lista.map((questao) {
+      return embaralharAlternativas
+          ? _embaralharAlternativas(questao)
+          : _semEmbaralhar(questao);
+    }).toList();
+  }
+
   /// Gera uma prova diferente para cada aluno da lista (RF04/RF13):
   /// cada aluno recebe uma seleção e uma ordem de alternativas próprias.
   static Map<String, List<GeneratedQuestion>> gerarProvasPorAluno({
@@ -55,6 +86,17 @@ class ExamGenerator {
       provas[aluno] = gerarProva(quantidade: quantidadeQuestoes);
     }
     return provas;
+  }
+
+  /// Converte para [GeneratedQuestion] mantendo a ordem original.
+  static GeneratedQuestion _semEmbaralhar(Question questao) {
+    return GeneratedQuestion(
+      originalId: questao.id,
+      subject: questao.subject,
+      statement: questao.statement,
+      alternatives: List<String>.from(questao.alternatives),
+      correctIndex: questao.correctIndex,
+    );
   }
 
   /// Embaralha as alternativas de uma questão, recalculando qual é o

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../data/mock_questoes.dart';
 import '../../data/turmas_mock.dart';
 import '../../models/prova_config.dart';
+import '../../models/prova_gerada.dart';
+import '../../services/prova_repository.dart';
+import '../../services/question_repository.dart';
+import '../../utils/exam_generator.dart';
+import '../../utils/firestore_errors.dart';
 
 
 class CriarProvaScreen extends StatefulWidget {
@@ -15,27 +19,75 @@ class CriarProvaScreen extends StatefulWidget {
 class _CriarProvaScreenState extends State<CriarProvaScreen> {
   int _etapaAtual = 0;
 
+  final QuestionRepository _questionRepository = QuestionRepository();
+  final ProvaRepository _provaRepository = ProvaRepository();
+
+  // Questões vindas do Firestore (Banco de Questões).
+  List<Question> _bancoQuestoes = const [];
+  bool _carregandoQuestoes = true;
+  String? _erroQuestoes;
+
+  bool _salvando = false;
+
+  // Prova que o professor está vendo na etapa 4. É gerada UMA vez ao
+  // entrar na etapa (e não a cada rebuild), para que o que aparece na
+  // tela seja exatamente o que será salvo.
+  List<GeneratedQuestion> _previewQuestoes = const [];
+
   final Set<String> _questoesSelecionadasIds = {};
   String? _filtroDisciplina;
 
   final ConfiguracaoProva _config = ConfiguracaoProva();
   final _nomeProvaController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    _carregarQuestoes();
+  }
+
+  Future<void> _carregarQuestoes() async {
+    setState(() {
+      _carregandoQuestoes = true;
+      _erroQuestoes = null;
+    });
+    try {
+      final questoes = await _questionRepository.buscarTodas();
+      if (!mounted) return;
+      setState(() {
+        _bancoQuestoes = questoes;
+        _carregandoQuestoes = false;
+      });
+    } catch (erro) {
+      if (!mounted) return;
+      setState(() {
+        _erroQuestoes = mensagemDeErro(erro);
+        _carregandoQuestoes = false;
+      });
+    }
+  }
+
   List<Question> get _questoesFiltradas {
-    if (_filtroDisciplina == null) return mockQuestoes;
-    return mockQuestoes
+    if (_filtroDisciplina == null) return _bancoQuestoes;
+    return _bancoQuestoes
         .where((q) => q.subject == _filtroDisciplina)
         .toList();
   }
 
   List<Question> get _questoesSelecionadas {
-    final selecionadas = mockQuestoes
+    return _bancoQuestoes
         .where((q) => _questoesSelecionadasIds.contains(q.id))
         .toList();
-    if (_config.embaralharQuestoes) {
-      selecionadas.shuffle();
-    }
-    return selecionadas;
+  }
+
+  /// Gera a prova mostrada na etapa 4, aplicando o embaralhamento
+  /// escolhido na etapa 3 (RF03).
+  void _gerarPreview() {
+    _previewQuestoes = ExamGenerator.gerarDeQuestoes(
+      _questoesSelecionadas,
+      embaralharQuestoes: _config.embaralharQuestoes,
+      embaralharAlternativas: _config.embaralharAlternativas,
+    );
   }
 
   @override
@@ -69,7 +121,10 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
         onStepTapped: (step) {
           // Só permite pular para uma etapa se as anteriores estiverem OK.
           if (step <= _etapaAtual || _podeAvancar(_etapaAtual)) {
-            setState(() => _etapaAtual = step);
+            setState(() {
+              _etapaAtual = step;
+              if (step == 3) _gerarPreview();
+            });
           }
         },
         onStepContinue: () {
@@ -82,7 +137,10 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
             return;
           }
           if (_etapaAtual < 3) {
-            setState(() => _etapaAtual += 1);
+            setState(() {
+              _etapaAtual += 1;
+              if (_etapaAtual == 3) _gerarPreview();
+            });
           }
         },
         onStepCancel: () {
@@ -103,9 +161,16 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
                   )
                 else
                   FilledButton.icon(
-                    onPressed: () => _mostrarProvaGerada(context),
-                    icon: const Icon(Icons.check),
-                    label: const Text('Gerar Prova'),
+                    onPressed:
+                        _salvando ? null : () => _gerarESalvarProva(context),
+                    icon: _salvando
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.check),
+                    label: Text(_salvando ? 'Salvando...' : 'Gerar Prova'),
                   ),
                 const SizedBox(width: 12),
                 if (_etapaAtual > 0)
@@ -150,7 +215,36 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
   // Etapa 1: Selecionar questões (RF01, RF02 - usa o banco de questões)
   // ---------------------------------------------------------------------
   Widget _buildSelecaoQuestoes(ColorScheme colorScheme) {
-    final disciplinas = mockQuestoes.map((q) => q.subject).toSet().toList();
+    if (_carregandoQuestoes) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_erroQuestoes != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_erroQuestoes!),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: _carregarQuestoes,
+            child: const Text('Tentar novamente'),
+          ),
+        ],
+      );
+    }
+
+    if (_bancoQuestoes.isEmpty) {
+      return const Text(
+        'O Banco de Questões está vazio. Cadastre questões no Banco de '
+        'Questões antes de criar uma prova.',
+      );
+    }
+
+    final disciplinas =
+        _bancoQuestoes.map((q) => q.subject).toSet().toList()..sort();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,7 +423,7 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
   // Etapa 4: Tela da prova / preview (RF14 - editar layout)
   // ---------------------------------------------------------------------
   Widget _buildPreviewProva(ColorScheme colorScheme) {
-    final questoes = _questoesSelecionadas;
+    final questoes = _previewQuestoes;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,16 +504,9 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
                 ),
                 itemBuilder: (context, index) {
                   final questao = questoes[index];
-                  final alternativas = List<String>.from(
-                    questao.alternatives,
-                  );
-                  if (_config.embaralharAlternativas) {
-                    alternativas.shuffle();
-                  }
                   return _QuestaoPreview(
                     numero: index + 1,
                     questao: questao,
-                    alternativas: alternativas,
                     tamanhoFonte: _config.tamanhoFonte,
                   );
                 },
@@ -431,11 +518,15 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
     );
   }
 
-  void _mostrarProvaGerada(BuildContext context) {
+  /// Monta a prova (a mesma para todos ou uma por aluno), salva no
+  /// Firestore e só então avisa o professor.
+  Future<void> _gerarESalvarProva(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+
     if (_questoesSelecionadasIds.isEmpty ||
         _nomeProvaController.text.trim().isEmpty ||
         _config.turma == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('Preencha todas as etapas antes de gerar a prova.'),
         ),
@@ -443,40 +534,92 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
       return;
     }
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Prova gerada (mock)'),
-        content: Text(
-          'A prova "${_nomeProvaController.text}" foi gerada com '
-          '${_questoesSelecionadasIds.length} questões para a turma '
-          '${_config.turma!.nome}.\n\n'
-          'Nesta fase (N1) a geração é apenas ilustrativa — a folha de '
-          'respostas com QR code e a persistência real ficam para as '
-          'próximas fases do projeto.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Ok'),
+    final turma = _config.turma!;
+    final selecionadas = _questoesSelecionadas;
+
+    // Mesma prova para todos: salva exatamente o que está no preview.
+    // Individualizada: gera uma prova própria (embaralhamento
+    // independente) para cada aluno da turma (RF04/RF13).
+    final List<ProvaDoAluno> provas;
+    if (_config.mesmaProvaParaTodos) {
+      provas = [ProvaDoAluno(questoes: _previewQuestoes)];
+    } else {
+      if (turma.alunos.isEmpty) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'A turma não tem alunos para gerar provas individualizadas.',
+            ),
           ),
-        ],
-      ),
+        );
+        return;
+      }
+      provas = [
+        for (final aluno in turma.alunos)
+          ProvaDoAluno(
+            aluno: aluno.nome,
+            matricula: aluno.matricula,
+            questoes: ExamGenerator.gerarDeQuestoes(
+              selecionadas,
+              embaralharQuestoes: _config.embaralharQuestoes,
+              embaralharAlternativas: _config.embaralharAlternativas,
+            ),
+          ),
+      ];
+    }
+
+    final prova = ProvaGerada(
+      nome: _nomeProvaController.text.trim(),
+      turmaNome: turma.nome,
+      mesmaProvaParaTodos: _config.mesmaProvaParaTodos,
+      embaralhouQuestoes: _config.embaralharQuestoes,
+      embaralhouAlternativas: _config.embaralharAlternativas,
+      colunas: _config.colunas,
+      tamanhoFonte: _config.tamanhoFonte,
+      provas: provas,
     );
+
+    setState(() => _salvando = true);
+    try {
+      await _provaRepository.salvar(prova);
+      if (!mounted) return;
+      setState(() => _salvando = false);
+
+      await showDialog<void>(
+        context: this.context, // seguro: já checamos `mounted` acima
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Prova gerada'),
+          content: Text(
+            'A prova "${prova.nome}" foi gerada com '
+            '${selecionadas.length} questões para a turma ${turma.nome} '
+            'e salva no banco de dados '
+            '(${provas.length} ${provas.length == 1 ? 'versão' : 'versões'}).',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Ok'),
+            ),
+          ],
+        ),
+      );
+    } catch (erro) {
+      if (!mounted) return;
+      setState(() => _salvando = false);
+      messenger.showSnackBar(SnackBar(content: Text(mensagemDeErro(erro))));
+    }
   }
 }
 
 /// Card individual de uma questão dentro do preview da prova.
 class _QuestaoPreview extends StatelessWidget {
   final int numero;
-  final Question questao;
-  final List<String> alternativas;
+  final GeneratedQuestion questao;
   final double tamanhoFonte;
 
   const _QuestaoPreview({
     required this.numero,
     required this.questao,
-    required this.alternativas,
     required this.tamanhoFonte,
   });
 
@@ -502,7 +645,7 @@ class _QuestaoPreview extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            ...alternativas.asMap().entries.map(
+            ...questao.alternatives.asMap().entries.map(
                   (e) => Text(
                     '${String.fromCharCode(65 + e.key)}) ${e.value}',
                     style: TextStyle(fontSize: tamanhoFonte - 1),
