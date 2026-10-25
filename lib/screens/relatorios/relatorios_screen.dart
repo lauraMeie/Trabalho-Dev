@@ -4,6 +4,7 @@ import '../../data/relatorios_calculos.dart';
 import '../../models/correction_result.dart';
 import '../../routes/app_routes.dart';
 import '../../services/correcao_repository.dart';
+import '../../services/excel_export_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/firestore_errors.dart';
 import '../../widgets/grafico_desempenho.dart';
@@ -69,6 +70,11 @@ class _ConteudoRelatorios extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: _BotaoExportarExcel(resultados: resultados),
+        ),
+        const SizedBox(height: AppSpacing.sm),
         Card(
           child: Padding(
             padding: const EdgeInsets.symmetric(
@@ -227,6 +233,61 @@ class _EstadoVazio extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _BotaoExportarExcel extends StatefulWidget {
+  final List<ResultadoCorrecao> resultados;
+
+  const _BotaoExportarExcel({required this.resultados});
+
+  @override
+  State<_BotaoExportarExcel> createState() => _BotaoExportarExcelState();
+}
+
+class _BotaoExportarExcelState extends State<_BotaoExportarExcel> {
+  bool _exportando = false;
+
+  Future<void> _exportar() async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _exportando = true);
+    try {
+      final caminho = await ExcelExportService.exportar(widget.resultados);
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            caminho == null
+                ? 'Planilha baixada com sucesso.'
+                : 'Planilha salva em: $caminho',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível gerar a planilha. Tente novamente.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _exportando = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: _exportando ? null : _exportar,
+      icon: _exportando
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.table_chart_outlined),
+      label: Text(_exportando ? 'Gerando...' : 'Exportar para Excel'),
     );
   }
 }
