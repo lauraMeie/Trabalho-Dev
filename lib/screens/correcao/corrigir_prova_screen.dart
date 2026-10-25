@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import '../../data/mock_corrections_store.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_theme.dart';
-import 'qrcode_mock_screen.dart';
+import 'qrcode_screen.dart';
 
 /// Ponto de partida do fluxo de correção (RF06/RF07): explica os passos e
-/// permite iniciar uma nova correção (escaneando o QR Code da folha de
-/// respostas, de forma simulada) ou ver as últimas provas já corrigidas.
+/// permite iniciar uma nova correção (escaneando o QR Code real da folha
+/// de respostas) ou ver as últimas provas já corrigidas.
 class CorrigirProvaScreen extends StatelessWidget {
   const CorrigirProvaScreen({super.key});
 
@@ -54,13 +54,13 @@ class CorrigirProvaScreen extends StatelessWidget {
                   _EtapaFluxo(
                     numero: '1',
                     titulo: 'Escanear QR Code',
-                    descricao: 'Identifica o aluno e a prova (mock).',
+                    descricao: 'Identifica a prova e o aluno pela câmera.',
                   ),
                   SizedBox(height: AppSpacing.sm),
                   _EtapaFluxo(
                     numero: '2',
                     titulo: 'Leitura das respostas',
-                    descricao: 'App lê as alternativas marcadas (mock).',
+                    descricao: 'Marque as alternativas da folha de respostas.',
                   ),
                   SizedBox(height: AppSpacing.sm),
                   _EtapaFluxo(
@@ -79,7 +79,7 @@ class CorrigirProvaScreen extends StatelessWidget {
                 settings: const RouteSettings(
                   name: AppRoutes.corrigirProvaQrCode,
                 ),
-                builder: (_) => const QrCodeMockScreen(),
+                builder: (_) => const QrCodeScreen(),
               ),
             ),
             icon: const Icon(Icons.qr_code_scanner),

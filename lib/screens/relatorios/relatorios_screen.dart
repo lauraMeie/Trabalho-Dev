@@ -5,7 +5,7 @@ import '../../routes/app_routes.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/grafico_desempenho.dart';
 import '../../widgets/stat_badge.dart';
-import '../correcao/qrcode_mock_screen.dart';
+import '../correcao/qrcode_screen.dart';
 
 /// Tela de Relatórios (RF09) e Estatísticas por questão (RF11), a partir
 /// das provas já corrigidas na sessão atual (mock, sem persistência real).
@@ -185,7 +185,7 @@ class _EstadoVazio extends StatelessWidget {
                 settings: const RouteSettings(
                   name: AppRoutes.corrigirProvaQrCode,
                 ),
-                builder: (_) => const QrCodeMockScreen(),
+                builder: (_) => const QrCodeScreen(),
               ),
             ),
             icon: const Icon(Icons.qr_code_scanner),
