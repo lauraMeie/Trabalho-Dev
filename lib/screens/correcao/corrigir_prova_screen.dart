@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../data/mock_corrections_store.dart';
+import '../../models/correction_result.dart';
 import '../../routes/app_routes.dart';
+import '../../services/correcao_repository.dart';
 import '../../theme/app_theme.dart';
 import 'qrcode_screen.dart';
 
@@ -13,8 +14,6 @@ class CorrigirProvaScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ultimasCorrecoes = MockCorrectionsStore.resultados.take(3).toList();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Corrigir Prova'),
@@ -92,8 +91,31 @@ class CorrigirProvaScreen extends StatelessWidget {
             icon: const Icon(Icons.bar_chart_outlined),
             label: const Text('Ver relatórios'),
           ),
-          if (ultimasCorrecoes.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.xl),
+          _UltimasCorrecoes(repositorio: CorrecaoRepository()),
+        ],
+      ),
+    );
+  }
+}
+
+class _UltimasCorrecoes extends StatelessWidget {
+  final CorrecaoRepository repositorio;
+
+  const _UltimasCorrecoes({required this.repositorio});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<ResultadoCorrecao>>(
+      stream: repositorio.observarResultados(),
+      builder: (context, snapshot) {
+        final ultimasCorrecoes =
+            (snapshot.data ?? const []).take(3).toList();
+        if (ultimasCorrecoes.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
               'Últimas correções',
               style: Theme.of(context).textTheme.titleMedium,
@@ -123,8 +145,8 @@ class CorrigirProvaScreen extends StatelessWidget {
               ),
             ),
           ],
-        ],
-      ),
+        );
+      },
     );
   }
 }

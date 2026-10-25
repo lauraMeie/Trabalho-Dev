@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/correction_result.dart';
 import '../utils/exam_generator.dart';
+import '../utils/firestore_errors.dart';
 import 'qr_prova_codec.dart';
 
 /// Prova de um aluno específico, lida de volta do Firestore a partir da
@@ -52,6 +54,12 @@ class CorrecaoRepository {
 
   CollectionReference<Map<String, dynamic>> get _provas =>
       _firestore.collection('provas');
+
+  /// Correções já realizadas (RF09/RF11), uma por folha de respostas lida.
+  static const String nomeColecaoCorrecoes = 'correcoes';
+
+  CollectionReference<Map<String, dynamic>> get _correcoes =>
+      _firestore.collection(nomeColecaoCorrecoes);
 
   /// Busca a prova (e o gabarito) identificados por um QR Code já
   /// decodificado. Lança [ProvaNaoEncontradaException] se a prova ou a
@@ -114,5 +122,34 @@ class CorrecaoRepository {
       provaId: provaId,
       individualId: individuais.docs.first.id,
     );
+  }
+
+  // ------------------------------------------------------------ CORREÇÕES
+
+  /// Salva o resultado de UMA correção no Firestore (RF08) e devolve o
+  /// mesmo resultado já com o ID definitivo do documento salvo.
+  Future<ResultadoCorrecao> salvarResultado(ResultadoCorrecao resultado) async {
+    final doc = await _correcoes
+        .add(resultado.toMap())
+        .timeout(tempoLimiteGravacao);
+    return ResultadoCorrecao.fromMap(doc.id, resultado.toMap());
+  }
+
+  /// Fica "ouvindo" as correções já feitas: a tela de Relatórios atualiza
+  /// sozinha sempre que uma nova prova é corrigida, sem precisar recarregar.
+  /// Mais recentes primeiro.
+  Stream<List<ResultadoCorrecao>> observarResultados() {
+    return _correcoes
+        .orderBy('corrigidoEm', descending: true)
+        .snapshots()
+        .map(_converter);
+  }
+
+  List<ResultadoCorrecao> _converter(
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) {
+    return snapshot.docs
+        .map((doc) => ResultadoCorrecao.fromMap(doc.id, doc.data()))
+        .toList();
   }
 }

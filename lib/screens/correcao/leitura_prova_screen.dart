@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../data/mock_corrections_store.dart';
 import '../../models/correction_result.dart';
 import '../../routes/app_routes.dart';
 import '../../services/correcao_repository.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/exam_generator.dart';
+import '../../utils/firestore_errors.dart';
 import 'resultado_correcao_screen.dart';
 
 /// Tela de leitura das respostas marcadas na folha de respostas (RF07).
@@ -30,6 +30,7 @@ class _LeituraProvaScreenState extends State<LeituraProvaScreen> {
   final Map<int, int?> _respostas = {};
 
   final _nomeAlunoController = TextEditingController();
+  final _correcaoRepository = CorrecaoRepository();
   bool _corrigindo = false;
 
   bool get _precisaDigitarAluno => widget.prova.aluno == null;
@@ -67,7 +68,7 @@ class _LeituraProvaScreenState extends State<LeituraProvaScreen> {
     ];
 
     final resultado = ResultadoCorrecao(
-      id: 'RES-${DateTime.now().millisecondsSinceEpoch}',
+      id: '', // definido pelo Firestore ao salvar (ver salvarResultado).
       aluno: aluno,
       turma: widget.prova.turmaNome,
       provaId: widget.prova.provaId,
@@ -75,16 +76,25 @@ class _LeituraProvaScreenState extends State<LeituraProvaScreen> {
       respostas: respostas,
     );
 
-    MockCorrectionsStore.adicionar(resultado);
+    try {
+      final resultadoSalvo =
+          await _correcaoRepository.salvarResultado(resultado);
+      if (!mounted) return;
 
-    if (!mounted) return;
-
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        settings: const RouteSettings(name: AppRoutes.corrigirProvaResultado),
-        builder: (_) => ResultadoCorrecaoScreen(resultado: resultado),
-      ),
-    );
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          settings:
+              const RouteSettings(name: AppRoutes.corrigirProvaResultado),
+          builder: (_) => ResultadoCorrecaoScreen(resultado: resultadoSalvo),
+        ),
+      );
+    } catch (erro) {
+      if (!mounted) return;
+      setState(() => _corrigindo = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mensagemDeErro(erro))),
+      );
+    }
   }
 
   @override

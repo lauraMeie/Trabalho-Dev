@@ -25,6 +25,28 @@ class RespostaCorrigida {
   String get textoCorreto => alternativas[indiceCorreto];
   String? get textoMarcado =>
       indiceMarcado == null ? null : alternativas[indiceMarcado!];
+
+  Map<String, dynamic> toMap() {
+    return {
+      'questaoId': questaoId,
+      'materia': materia,
+      'enunciado': enunciado,
+      'alternativas': alternativas,
+      'indiceCorreto': indiceCorreto,
+      'indiceMarcado': indiceMarcado,
+    };
+  }
+
+  factory RespostaCorrigida.fromMap(Map<String, dynamic> map) {
+    return RespostaCorrigida(
+      questaoId: map['questaoId'] as String? ?? '',
+      materia: map['materia'] as String? ?? '',
+      enunciado: map['enunciado'] as String? ?? '',
+      alternativas: List<String>.from(map['alternativas'] as List? ?? const []),
+      indiceCorreto: (map['indiceCorreto'] as num?)?.toInt() ?? 0,
+      indiceMarcado: (map['indiceMarcado'] as num?)?.toInt(),
+    );
+  }
 }
 
 /// Resultado completo da correção automatizada de uma prova (RF07/RF08):
@@ -53,4 +75,36 @@ class ResultadoCorrecao {
 
   /// Nota de 0 a 10, proporcional ao número de acertos.
   double get nota => totalQuestoes == 0 ? 0 : (acertos / totalQuestoes) * 10;
+
+  /// Formato salvo no Firestore (coleção `correcoes`). O `id` NÃO entra no
+  /// mapa: quem identifica o documento é o ID dele no Firestore (ver
+  /// [fromMap]), igual ao padrão usado em Turma/Question.
+  Map<String, dynamic> toMap() {
+    return {
+      'aluno': aluno,
+      'turma': turma,
+      'provaId': provaId,
+      'corrigidoEm': corrigidoEm.toIso8601String(),
+      'respostas': respostas.map((r) => r.toMap()).toList(),
+    };
+  }
+
+  factory ResultadoCorrecao.fromMap(String id, Map<String, dynamic> map) {
+    final corrigidoEmRaw = map['corrigidoEm'];
+    final corrigidoEm = corrigidoEmRaw is String
+        ? DateTime.tryParse(corrigidoEmRaw) ?? DateTime.now()
+        : DateTime.now();
+
+    return ResultadoCorrecao(
+      id: id,
+      aluno: map['aluno'] as String? ?? '',
+      turma: map['turma'] as String? ?? '',
+      provaId: map['provaId'] as String? ?? '',
+      corrigidoEm: corrigidoEm,
+      respostas: (map['respostas'] as List? ?? const [])
+          .whereType<Map>()
+          .map((r) => RespostaCorrigida.fromMap(Map<String, dynamic>.from(r)))
+          .toList(),
+    );
+  }
 }
