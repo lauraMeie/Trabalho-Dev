@@ -3,12 +3,13 @@ import 'routes/app_routes.dart';
 import 'theme/app_theme.dart';
 import 'widgets/background_texture.dart';
 import 'screens/login/login_screen.dart';
-import 'screens/home/home_screen.dart';
 import 'screens/turmas/turmas_screen.dart';
 import 'screens/banco_questoes_screen.dart';
 import 'screens/provas/criar_prova_screen.dart';
 import 'screens/correcao/corrigir_prova_screen.dart';
 import 'screens/relatorios/relatorios_screen.dart';
+import 'screens/login/register_screen.dart';
+import 'auth_gate.dart';
 
 class ProvaLab extends StatelessWidget {
   const ProvaLab({super.key});
@@ -22,12 +23,13 @@ class ProvaLab extends StatelessWidget {
       initialRoute: AppRoutes.home,
       routes: {
         AppRoutes.login: (context) => const LoginScreen(),
-        AppRoutes.home: (context) => const HomeScreen(),
         AppRoutes.turmas: (context) => const TurmasScreen(),
         AppRoutes.bancoQuestoes: (context) => const BancoQuestoesScreen(),
         AppRoutes.criarProva: (context) => const CriarProvaScreen(),
         AppRoutes.corrigirProva: (context) => const CorrigirProvaScreen(),
         AppRoutes.relatorios: (context) => const RelatoriosScreen(),
+        AppRoutes.cadastro: (context) => const RegisterScreen(),
+        AppRoutes.home: (context) => const AuthGate(),
       },
       builder: (context, child) {
         return Stack(
