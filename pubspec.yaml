@@ -22,10 +22,11 @@ dependencies:
   cupertino_icons: ^1.0.8
   google_fonts: ^6.2.1
   flutter_svg: ^2.0.10
-  firebase_core: ^4.15.0
-  cloud_firestore: ^6.10.0
+  firebase_core: ^4.15.2
+  cloud_firestore: ^6.10.2
   pdf: ^3.11.0
   printing: ^5.13.0
+  firebase_auth: ^6.7.1
 
 dev_dependencies:
   flutter_test:
