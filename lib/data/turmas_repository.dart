@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/aluno.dart';
 import '../models/turma.dart';
 
@@ -20,24 +20,37 @@ class TurmasRepository {
   CollectionReference<Map<String, dynamic>> _alunos(String turmaId) =>
       _turmas.doc(turmaId).collection('alunos');
 
-  // ---------------------------------------------------------------- TURMAS
 
-  /// Lista de turmas em tempo real (atualiza sozinha quando o banco muda).
-  Stream<List<Turma>> turmasStream() {
-    return _turmas.orderBy('nome').snapshots().map(
-          (snap) =>
-              snap.docs.map((d) => Turma.fromMap(d.id, d.data())).toList(),
-        );
-  }
+ Stream<List<Turma>> turmasStream() {
+  return _turmas
+      .where('uid', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+      .snapshots()
+      .map((snap) {
+    final lista =
+        snap.docs.map((d) => Turma.fromMap(d.id, d.data())).toList();
+    lista.sort((a, b) => a.nome.compareTo(b.nome));
+    return lista;
+  });
+}
 
   /// Leitura única das turmas (útil para outras telas, ex.: criar prova).
   Future<List<Turma>> listarTurmas() async {
-    final snap = await _turmas.orderBy('nome').get();
-    return snap.docs.map((d) => Turma.fromMap(d.id, d.data())).toList();
+    final snap = await _turmas
+    .where('uid', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+    .get();
+final lista =
+    snap.docs.map((d) => Turma.fromMap(d.id, d.data())).toList();
+lista.sort((a, b) => a.nome.compareTo(b.nome));
+return lista;
   }
 
   Future<void> criarTurma(String nome) async {
-    await _turmas.add({'nome': nome, 'quantidadeAlunos': 0});
+  await _turmas.add({
+    'nome': nome,
+    'quantidadeAlunos': 0,
+    'uid': FirebaseAuth.instance.currentUser!.uid,
+  });
+
   }
 
   Future<void> atualizarTurma(String turmaId, String nome) async {
