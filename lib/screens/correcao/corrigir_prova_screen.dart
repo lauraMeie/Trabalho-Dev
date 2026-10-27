@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 
-import '../../data/mock_corrections_store.dart';
+import '../../models/correction_result.dart';
 import '../../routes/app_routes.dart';
+import '../../services/correcao_repository.dart';
 import '../../theme/app_theme.dart';
-import 'qrcode_mock_screen.dart';
+import 'qrcode_screen.dart';
 
 /// Ponto de partida do fluxo de correção (RF06/RF07): explica os passos e
-/// permite iniciar uma nova correção (escaneando o QR Code da folha de
-/// respostas, de forma simulada) ou ver as últimas provas já corrigidas.
+/// permite iniciar uma nova correção (escaneando o QR Code real da folha
+/// de respostas) ou ver as últimas provas já corrigidas.
 class CorrigirProvaScreen extends StatelessWidget {
   const CorrigirProvaScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final ultimasCorrecoes = MockCorrectionsStore.resultados.take(3).toList();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Corrigir Prova'),
@@ -54,13 +53,13 @@ class CorrigirProvaScreen extends StatelessWidget {
                   _EtapaFluxo(
                     numero: '1',
                     titulo: 'Escanear QR Code',
-                    descricao: 'Identifica o aluno e a prova (mock).',
+                    descricao: 'Identifica a prova e o aluno pela câmera.',
                   ),
                   SizedBox(height: AppSpacing.sm),
                   _EtapaFluxo(
                     numero: '2',
                     titulo: 'Leitura das respostas',
-                    descricao: 'App lê as alternativas marcadas (mock).',
+                    descricao: 'Marque as alternativas da folha de respostas.',
                   ),
                   SizedBox(height: AppSpacing.sm),
                   _EtapaFluxo(
@@ -79,7 +78,7 @@ class CorrigirProvaScreen extends StatelessWidget {
                 settings: const RouteSettings(
                   name: AppRoutes.corrigirProvaQrCode,
                 ),
-                builder: (_) => const QrCodeMockScreen(),
+                builder: (_) => const QrCodeScreen(),
               ),
             ),
             icon: const Icon(Icons.qr_code_scanner),
@@ -92,8 +91,31 @@ class CorrigirProvaScreen extends StatelessWidget {
             icon: const Icon(Icons.bar_chart_outlined),
             label: const Text('Ver relatórios'),
           ),
-          if (ultimasCorrecoes.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.xl),
+          _UltimasCorrecoes(repositorio: CorrecaoRepository()),
+        ],
+      ),
+    );
+  }
+}
+
+class _UltimasCorrecoes extends StatelessWidget {
+  final CorrecaoRepository repositorio;
+
+  const _UltimasCorrecoes({required this.repositorio});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<ResultadoCorrecao>>(
+      stream: repositorio.observarResultados(),
+      builder: (context, snapshot) {
+        final ultimasCorrecoes =
+            (snapshot.data ?? const []).take(3).toList();
+        if (ultimasCorrecoes.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
               'Últimas correções',
               style: Theme.of(context).textTheme.titleMedium,
@@ -123,8 +145,8 @@ class CorrigirProvaScreen extends StatelessWidget {
               ),
             ),
           ],
-        ],
-      ),
+        );
+      },
     );
   }
 }

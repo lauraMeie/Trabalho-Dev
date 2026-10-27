@@ -4,7 +4,7 @@ import '../../models/correction_result.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/stat_badge.dart';
-import 'qrcode_mock_screen.dart';
+import 'qrcode_screen.dart';
 
 /// Mostra o resultado da correção automatizada de uma prova (RF08):
 /// nota, quantidade de acertos/erros/em branco e o detalhe de cada questão.
@@ -95,7 +95,7 @@ class ResultadoCorrecaoScreen extends StatelessWidget {
               MaterialPageRoute(
                 settings:
                     const RouteSettings(name: AppRoutes.corrigirProvaQrCode),
-                builder: (_) => const QrCodeMockScreen(),
+                builder: (_) => const QrCodeScreen(),
               ),
               (route) => route.settings.name == AppRoutes.corrigirProva ||
                   route.settings.name == AppRoutes.home,

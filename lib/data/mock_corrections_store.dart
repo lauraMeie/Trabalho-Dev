@@ -37,12 +37,14 @@ class EstatisticaQuestao {
       totalRespostas == 0 ? 0 : acertos / totalRespostas;
 }
 
-/// "Banco de dados" fictício, em memória, das provas já corrigidas na
-/// sessão atual (fase N1 — sem persistência real, ver README).
+/// "Banco de dados" fictício, em memória, das provas corrigidas (era usado
+/// na fase N1, sem persistência real — ver README).
 ///
-/// Começa com alguns resultados de exemplo já corrigidos, para a tela de
-/// Relatórios não começar vazia, e recebe novos resultados conforme o
-/// professor usa o fluxo de correção (QR Code mock → leitura mock).
+/// Na N2, a tela de Relatórios e o fluxo de correção passaram a usar dados
+/// reais do Firestore (ver CorrecaoRepository/RelatoriosCalculos). Esta
+/// classe não é mais usada pelas telas; foi mantida só para não quebrar a
+/// suíte de testes já existente, que valida as regras de agregação
+/// (mediaGeral, estatisticasPorQuestao etc.) com dados de exemplo.
 class MockCorrectionsStore {
   MockCorrectionsStore._();
 

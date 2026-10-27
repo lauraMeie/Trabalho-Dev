@@ -36,6 +36,19 @@ class GeneratedQuestion {
       'correctLetter': correctLetter,
     };
   }
+
+  /// Reconstrói a questão a partir do que foi salvo no Firestore (usado na
+  /// correção real: a prova/gabarito identificados pelo QR Code são lidos
+  /// de volta do banco, em vez de gerados de novo).
+  factory GeneratedQuestion.fromMap(Map<String, dynamic> map) {
+    return GeneratedQuestion(
+      originalId: map['originalId'] as String? ?? '',
+      subject: map['subject'] as String? ?? '',
+      statement: map['statement'] as String? ?? '',
+      alternatives: List<String>.from(map['alternatives'] as List? ?? const []),
+      correctIndex: (map['correctIndex'] as num?)?.toInt() ?? 0,
+    );
+  }
 }
 
 /// Responsável por "puxar" questões do banco e montar uma prova,
