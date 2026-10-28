@@ -49,8 +49,8 @@ ler e gravar dados no **Firebase** (Authentication e Cloud Firestore).
   Firestore e atualizados automaticamente.
 - **Turmas e Alunos no Firestore**: cadastrar, listar, editar e excluir turmas
   (a exclusão remove também os alunos da turma). 
-- **Banco de Questões no Firestore**: [CONFIRMAR: cadastrar, listar, editar e excluir]
-- **Provas no Firestore**: [CONFIRMAR: criar, listar e excluir]
+- **Banco de Questões no Firestore**:
+- **Provas no Firestore**:
 - Regras de segurança do Firestore: acesso permitido apenas a usuários autenticados.
 
 **Fora da N2** (previsto para as próximas fases do projeto):
@@ -64,11 +64,11 @@ ler e gravar dados no **Firebase** (Authentication e Cloud Firestore).
 
 | Código | Descrição | Situação (N2) |
 |---|---|---|
-| RF01 | Gerar provas automaticamente a partir de um banco de questões | [CONFIRMAR] |
-| RF02 | Cadastrar e organizar um banco de questões | [CONFIRMAR] |
-| RF03 | Randomizar a ordem das questões e alternativas entre provas de uma turma | Em desenvolvimento |
-| RF04 | Escolher entre usar as mesmas questões para todos ou gerar provas diferentes por aluno | Implementado |
-| RF05 | Gerar folha de respostas separada da prova, com QR code de identificação | [CONFIRMAR] |
+| RF01 | Gerar provas automaticamente a partir de um banco de questões
+| RF02 | Cadastrar e organizar um banco de questões 
+| RF03 | Randomizar a ordem das questões e alternativas entre provas de uma turma 
+| RF04 | Escolher entre usar as mesmas questões para todos ou gerar provas diferentes por aluno 
+| RF05 | Gerar folha de respostas separada da prova, com QR code de identificação 
 | RF06 | Ler o QR code para identificar a prova/gabarito | [CONFIRMAR] |
 | RF07 | Corrigir automaticamente a prova a partir das alternativas marcadas | [CONFIRMAR] |
 | RF08 | Calcular a nota automaticamente após a correção | [CONFIRMAR] |
@@ -76,10 +76,10 @@ ler e gravar dados no **Firebase** (Authentication e Cloud Firestore).
 | RF10 | Exportar resultados em planilha (Excel) | Previsto |
 | RF11 | Gerar estatística por questão (alternativa mais marcada) | [CONFIRMAR] |
 | RF12 | Importar lista de alunos | [CONFIRMAR] |
-| RF13 | Gerar prova individualizada e identificável por aluno | [CONFIRMAR] |
-| RF14 | Editar o layout da prova gerada | [CONFIRMAR] |
+| RF13 | Gerar prova individualizada e identificável por aluno 
+| RF14 | Editar o layout da prova gerada 
 | RF15 | Exigir autenticação (login ou cadastro) para acessar o app; os dados são gravados no banco apenas para usuários autenticados | Implementado (alterado na N2) |
-| RF16 | Conseguir editar e remover questões, turmas e provas | Turmas implementado; demais [CONFIRMAR] |
+| RF16 | Conseguir editar e remover questões, turmas e provas | Turmas implementado; demais
 | RF17 | Permitir cadastro de novo usuário e recuperação de senha por e-mail | Implementado (novo na N2) |
 | RF18 | Exibir na Home a quantidade real de turmas, alunos e provas | Implementado (novo na N2) |
 
@@ -91,15 +91,15 @@ ler e gravar dados no **Firebase** (Authentication e Cloud Firestore).
 
 | Código | Descrição | Situação (N2) |
 |---|---|---|
-| RNF01 | Interface minimalista, com poucos elementos na tela | Atendido |
-| RNF02 | Navegação lógica, intuitiva e de fácil uso | Atendido |
-| RNF03 | Correção rápida o suficiente para turmas grandes | [CONFIRMAR] |
+| RNF01 | Interface minimalista, com poucos elementos na tela 
+| RNF02 | Navegação lógica, intuitiva e de fácil uso
+| RNF03 | Correção rápida o suficiente para turmas grandes 
 | RNF04 | Leitura confiável das respostas, sem erro de quebra de página | [CONFIRMAR] |
 | RNF05 | Exportação de dados em formato de planilha (Excel) | Previsto |
-| RNF06 | Funcionalidades de escrita/persistência devem exigir usuário autenticado | Implementado (alterado na N2: o app inteiro exige login) |
-| RNF07 | Os dados devem ser persistidos em banco de dados real (Cloud Firestore) | Implementado (novo na N2) |
-| RNF08 | Senhas gerenciadas pelo Firebase Authentication, sem armazenamento próprio | Implementado (novo na N2) |
-| RNF09 | Mensagens de erro claras e em português | Implementado (novo na N2) |
+| RNF06 | Funcionalidades de escrita/persistência devem exigir usuário autenticado 
+| RNF07 | Os dados devem ser persistidos em banco de dados real (Cloud Firestore) 
+| RNF08 | Senhas gerenciadas pelo Firebase Authentication, sem armazenamento próprio 
+| RNF09 | Mensagens de erro claras e em português 
 
 ## Telas principais
 
