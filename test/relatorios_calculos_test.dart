@@ -72,8 +72,28 @@ void main() {
       ];
       for (final estatistica
           in RelatoriosCalculos.estatisticasPorQuestao(resultados)) {
-        expect(estatistica.acertos, lessThanOrEqualTo(estatistica.totalRespostas));
+        expect(
+          estatistica.acertos,
+          lessThanOrEqualTo(estatistica.totalRespostas),
+        );
+        expect(estatistica.percentualAcerto, inInclusiveRange(0.0, 1.0));
       }
+    });
+
+    test('agrupa as respostas de vários alunos pelo id da questão', () {
+      final resultados = [
+        _resultado(aluno: 'A', turma: 'T1', marcacoes: [0]), // acerta q0
+        _resultado(aluno: 'B', turma: 'T1', marcacoes: [1]), // erra q0
+      ];
+
+      final estatisticas =
+          RelatoriosCalculos.estatisticasPorQuestao(resultados);
+
+      expect(estatisticas, hasLength(1));
+      expect(estatisticas.first.questaoId, 'q0');
+      expect(estatisticas.first.totalRespostas, 2);
+      expect(estatisticas.first.acertos, 1);
+      expect(estatisticas.first.percentualAcerto, 0.5);
     });
   });
 }

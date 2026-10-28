@@ -1,5 +1,5 @@
 import '../models/correction_result.dart';
-import 'mock_corrections_store.dart' show EstatisticaQuestao;
+import '../models/estatistica_questao.dart';
 
 /// Cálculos agregados para a tela de Relatórios (RF09/RF11), a partir de
 /// uma lista real de correções (lidas do Firestore via CorrecaoRepository).
