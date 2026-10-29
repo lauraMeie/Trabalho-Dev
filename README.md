@@ -398,6 +398,7 @@ Observações:
 | Remover tela duplicada de Banco de Questões | 20/10 | Concluído |
 
 ---
+Vídeo referente as telas da N2 (https://youtube.com/shorts/d_52iMSrJM0?feature=share)
 
 <div align="center">
 
