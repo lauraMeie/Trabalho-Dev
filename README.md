@@ -123,13 +123,25 @@ Nesta fase o app deixou de depender de dados mock nas telas principais e passou 
 
 📌 **N1**
 
-> Fluxo de navegação: **Login/Cadastro → Home → Turmas / Banco de Questões / Criar Prova / Corrigir Prova / Relatórios**. Abaixo estão as telas de Login e Cadastro e o fluxo de Correção de Provas e Relatórios, já na versão integrada ao Firestore (N2); as demais telas (Home, Turmas, Banco de Questões, Criar Prova) ainda precisam dos prints atualizados por quem desenvolveu cada uma.
+> Fluxo de navegação: **Login/Cadastro → Home → Turmas / Banco de Questões / Criar Prova / Corrigir Prova / Relatórios**. Abaixo estão todas as telas principais do app, já na versão integrada ao Firestore (N2).
 
 ![Login](docs/telas/tela-login.png)
 *Login: autenticação real com Firebase Authentication (e-mail e senha), com recuperação de senha por e-mail.*
 
 ![Cadastro](docs/telas/tela-cadastro.png)
 *Cadastro: criação de conta (nome, e-mail, senha e confirmação) via Firebase Authentication.*
+
+![Home](docs/telas/tela-home.png)
+*Home: resumo de turmas, alunos e provas, com acesso ao menu principal (Turmas, Banco de Questões, Criar Prova, Corrigir Prova, Relatórios).*
+
+![Turmas](docs/telas/tela-turmas.png)
+*Turmas: listagem das turmas cadastradas pelo professor, com opção de criar uma nova turma.*
+
+![Banco de Questões](docs/telas/tela-banco-questoes.png)
+*Banco de Questões: questões reais cadastradas no Firestore, organizadas por matéria.*
+
+![Criar Prova](docs/telas/tela-criar-prova.png)
+*Criar Prova: seleção das questões do banco (com filtro por matéria) para montar uma nova avaliação.*
 
 ![Escanear QR Code](docs/telas/tela-corrigir-qrcode.png)
 *Escanear QR Code: leitura real pela câmera do dispositivo (ou entrada manual do código), identificando a prova salva no Firestore.*
@@ -142,8 +154,6 @@ Nesta fase o app deixou de depender de dados mock nas telas principais e passou 
 
 ![Relatórios](docs/telas/tela-relatorios.png)
 *Relatórios: dados reais lidos do Firestore (média geral, turmas, desempenho por matéria, estatística por questão) e exportação para Excel.*
-
-> 📎 **Pendente:** prints das telas de Home, Turmas, Banco de Questões e Criar Prova — cada responsável pode salvar o print em `docs/telas/` e adicionar aqui no mesmo padrão.
 
 ## 4. Modelo de Dados
 
