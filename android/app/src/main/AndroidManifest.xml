@@ -5,7 +5,7 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
-        android:label="nome_do_projeto"
+        android:label="Provas App"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
