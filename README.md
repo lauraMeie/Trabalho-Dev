@@ -374,7 +374,9 @@ Observações:
 
 | Tarefa | Prazo | Status |
 |---|---|---|
-| Integração de Turmas e Alunos com o Firestore (CRUD completo) | 22/10 | Concluído |
+|Substituir a lista mock de turmas por leitura real da coleção 'turmas' no Firestore (listar, criar, editar e excluir) | 22/10 | Concluído |
+| Listar, cadastrar, editar e excluir alunos de uma turma direto no banco de dados real, substituindo os dados mock. | 22/10 | Concluído |
+| Adaptar as classes Turma e Aluno com métodos toMap()/fromMap() (ou fromJson/toJson) para o Banco. | 22/10 | Concluído |
 
 ### Henrique Roberti Ribeiro
 
