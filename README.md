@@ -123,7 +123,13 @@ Nesta fase o app deixou de depender de dados mock nas telas principais e passou 
 
 📌 **N1**
 
-> Fluxo de navegação: **Login/Cadastro → Home → Turmas / Banco de Questões / Criar Prova / Corrigir Prova / Relatórios**. Abaixo estão as telas do fluxo de Correção de Provas e Relatórios, já na versão integrada ao Firestore (N2); as demais telas (Login, Cadastro, Home, Turmas, Banco de Questões, Criar Prova) ainda precisam dos prints atualizados por quem desenvolveu cada uma.
+> Fluxo de navegação: **Login/Cadastro → Home → Turmas / Banco de Questões / Criar Prova / Corrigir Prova / Relatórios**. Abaixo estão as telas de Login e Cadastro e o fluxo de Correção de Provas e Relatórios, já na versão integrada ao Firestore (N2); as demais telas (Home, Turmas, Banco de Questões, Criar Prova) ainda precisam dos prints atualizados por quem desenvolveu cada uma.
+
+![Login](docs/telas/tela-login.png)
+*Login: autenticação real com Firebase Authentication (e-mail e senha), com recuperação de senha por e-mail.*
+
+![Cadastro](docs/telas/tela-cadastro.png)
+*Cadastro: criação de conta (nome, e-mail, senha e confirmação) via Firebase Authentication.*
 
 ![Escanear QR Code](docs/telas/tela-corrigir-qrcode.png)
 *Escanear QR Code: leitura real pela câmera do dispositivo (ou entrada manual do código), identificando a prova salva no Firestore.*
@@ -137,7 +143,7 @@ Nesta fase o app deixou de depender de dados mock nas telas principais e passou 
 ![Relatórios](docs/telas/tela-relatorios.png)
 *Relatórios: dados reais lidos do Firestore (média geral, turmas, desempenho por matéria, estatística por questão) e exportação para Excel.*
 
-> 📎 **Pendente:** prints das telas de Login, Cadastro, Home, Turmas, Banco de Questões e Criar Prova — cada responsável pode salvar o print em `docs/telas/` e adicionar aqui no mesmo padrão.
+> 📎 **Pendente:** prints das telas de Home, Turmas, Banco de Questões e Criar Prova — cada responsável pode salvar o print em `docs/telas/` e adicionar aqui no mesmo padrão.
 
 ## 4. Modelo de Dados
 
