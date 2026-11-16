@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'minhas_provas_screen.dart';
+
 import '../../models/prova_config.dart';
 import '../../models/prova_gerada.dart';
 import '../../services/prova_pdf_service.dart';
@@ -216,6 +218,17 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Criar Prova'),
+        actions: [
+          IconButton(
+            tooltip: 'Minhas Provas',
+            icon: const Icon(Icons.folder_open_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const MinhasProvasScreen(),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Stepper(
         currentStep: _etapaAtual,
