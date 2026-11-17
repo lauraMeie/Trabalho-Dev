@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/correction_result.dart';
 import '../utils/exam_generator.dart';
@@ -42,6 +43,9 @@ class ProvaNaoEncontradaException implements Exception {
 /// Lê a prova gerada pela tela Criar Prova (coleção `provas`, ver
 /// ProvaRepository) a partir do ID identificado no QR Code da folha de
 /// respostas.
+///
+/// Cada professor só enxerga as próprias provas e correções: os documentos
+/// guardam o campo `uid` do dono e as consultas filtram por ele.
 class CorrecaoRepository {
   CorrecaoRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
@@ -52,6 +56,9 @@ class CorrecaoRepository {
   /// internet, o Firestore pode ficar pendente em vez de dar erro.
   static const Duration _tempoLimiteLeitura = Duration(seconds: 10);
 
+  /// UID do professor logado.
+  String get _uid => FirebaseAuth.instance.currentUser!.uid;
+
   CollectionReference<Map<String, dynamic>> get _provas =>
       _firestore.collection('provas');
 
@@ -61,9 +68,19 @@ class CorrecaoRepository {
   CollectionReference<Map<String, dynamic>> get _correcoes =>
       _firestore.collection(nomeColecaoCorrecoes);
 
+  /// Converte um campo de data (String ISO ou Timestamp) em texto
+  /// comparável, para ordenar no app sem precisar de índice composto.
+  String _dataComoTexto(dynamic valor) {
+    if (valor is Timestamp) return valor.toDate().toIso8601String();
+    return valor?.toString() ?? '';
+  }
+
   /// Busca a prova (e o gabarito) identificados por um QR Code já
   /// decodificado. Lança [ProvaNaoEncontradaException] se a prova ou a
   /// versão individual dela não existir mais.
+  ///
+  /// As regras do Firestore recusam a leitura de provas de outro professor
+  /// (vira FirebaseException com code 'permission-denied').
   Future<ProvaParaCorrigir> buscarProvaDoAluno(QrProvaPayload payload) async {
     final docPrincipal =
         await _provas.doc(payload.provaId).get().timeout(_tempoLimiteLeitura);
@@ -98,25 +115,29 @@ class CorrecaoRepository {
 
   /// Usado só como auxílio de teste: a tela de Criar Prova (RF05, de outro
   /// colega do grupo) ainda não imprime o QR Code na folha de respostas,
-  /// então aqui pegamos a prova mais recente já salva no banco para gerar
+  /// então aqui pegamos a prova mais recente do professor logado para gerar
   /// um QR Code de demonstração e validar a leitura pela câmera ponta a
   /// ponta.
   Future<QrProvaPayload?> buscarQrDeTeste() async {
-    final maisRecente = await _provas
-        .orderBy('criadaEm', descending: true)
-        .limit(1)
+    // Filtra por uid e ordena no app (evita criar índice composto).
+    final snap = await _provas
+        .where('uid', isEqualTo: _uid)
         .get()
         .timeout(_tempoLimiteLeitura);
-    if (maisRecente.docs.isEmpty) return null;
+    if (snap.docs.isEmpty) return null;
 
-    final provaId = maisRecente.docs.first.id;
+    final docs = snap.docs.toList()
+      ..sort((a, b) => _dataComoTexto(b.data()['criadaEm'])
+          .compareTo(_dataComoTexto(a.data()['criadaEm'])));
+
+    final provaId = docs.first.id;
     final individuais = await _provas
-        .doc(provaId)
-        .collection('individuais')
-        .limit(1)
-        .get()
-        .timeout(_tempoLimiteLeitura);
-    if (individuais.docs.isEmpty) return null;
+    .doc(provaId)
+    .collection('individuais')
+    .where('uid', isEqualTo: _uid)
+    .limit(1)
+    .get()
+    .timeout(_tempoLimiteLeitura);
 
     return QrProvaPayload(
       provaId: provaId,
@@ -128,28 +149,27 @@ class CorrecaoRepository {
 
   /// Salva o resultado de UMA correção no Firestore (RF08) e devolve o
   /// mesmo resultado já com o ID definitivo do documento salvo.
+  /// A correção é gravada com o `uid` do professor logado.
   Future<ResultadoCorrecao> salvarResultado(ResultadoCorrecao resultado) async {
-    final doc = await _correcoes
-        .add(resultado.toMap())
-        .timeout(tempoLimiteGravacao);
-    return ResultadoCorrecao.fromMap(doc.id, resultado.toMap());
+    final dados = {...resultado.toMap(), 'uid': _uid};
+    final doc = await _correcoes.add(dados).timeout(tempoLimiteGravacao);
+    return ResultadoCorrecao.fromMap(doc.id, dados);
   }
 
-  /// Fica "ouvindo" as correções já feitas: a tela de Relatórios atualiza
-  /// sozinha sempre que uma nova prova é corrigida, sem precisar recarregar.
-  /// Mais recentes primeiro.
+  /// Fica "ouvindo" as correções do professor logado: a tela de Relatórios
+  /// atualiza sozinha sempre que uma nova prova é corrigida, sem precisar
+  /// recarregar. Mais recentes primeiro.
   Stream<List<ResultadoCorrecao>> observarResultados() {
     return _correcoes
-        .orderBy('corrigidoEm', descending: true)
+        .where('uid', isEqualTo: _uid)
         .snapshots()
-        .map(_converter);
-  }
-
-  List<ResultadoCorrecao> _converter(
-    QuerySnapshot<Map<String, dynamic>> snapshot,
-  ) {
-    return snapshot.docs
-        .map((doc) => ResultadoCorrecao.fromMap(doc.id, doc.data()))
-        .toList();
+        .map((snapshot) {
+      final docs = snapshot.docs.toList()
+        ..sort((a, b) => _dataComoTexto(b.data()['corrigidoEm'])
+            .compareTo(_dataComoTexto(a.data()['corrigidoEm'])));
+      return docs
+          .map((doc) => ResultadoCorrecao.fromMap(doc.id, doc.data()))
+          .toList();
+    });
   }
 }

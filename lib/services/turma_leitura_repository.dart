@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
@@ -26,8 +26,12 @@ class TurmaLeituraRepository {
   static const String nomeSubcolecaoAlunos = 'alunos';
 
   Future<List<Turma>> buscarTodas() async {
-    final snapshot = await _firestore.collection(nomeColecao).get();
-
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+final snapshot = await _firestore
+    .collection(nomeColecao)
+    .where('uid', isEqualTo: uid)
+    .get();
+    
     final turmas = await Future.wait(
       snapshot.docs.map((doc) async {
         final nome = (doc.data()['nome'] as String?)?.trim() ?? '';
