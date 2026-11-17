@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_theme.dart';
 
 /// Tela de cadastro com Firebase Authentication (e-mail e senha).
+/// Além da conta no Auth, cria o perfil do professor em professores/{uid}.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -78,19 +80,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    final nome = _nomeController.text.trim();
+    final email = _emailController.text.trim();
+
     setState(() => _carregando = true);
     try {
       final credencial =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
+        email: email,
         password: _senhaController.text,
       );
-      await credencial.user?.updateDisplayName(_nomeController.text.trim());
+      final user = credencial.user!;
+      await user.updateDisplayName(nome);
+
+      // Perfil do professor: o ID do documento é o uid, então é único.
+      try {
+        await FirebaseFirestore.instance
+            .collection('professores')
+            .doc(user.uid)
+            .set({
+          'nome': nome,
+          'email': email,
+          'criadoEm': FieldValue.serverTimestamp(),
+        });
+      } catch (_) {
+        // Se o perfil não foi salvo, desfaz a conta para não ficar
+        // um login sem cadastro.
+        await user.delete();
+        rethrow;
+      }
 
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } on FirebaseAuthException catch (e) {
       _mostrarMensagem(_traduzirErro(e.code));
+    } on FirebaseException catch (e) {
+      _mostrarMensagem('Não foi possível salvar o perfil: ${e.code}');
     } finally {
       if (mounted) setState(() => _carregando = false);
     }

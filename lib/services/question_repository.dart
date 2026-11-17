@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 import '../models/question.dart';
@@ -8,7 +9,11 @@ import '../utils/firestore_errors.dart';
 
 /// Acesso ao Banco de Questões no Firestore (coleção `questoes`).
 ///
+/// Cada professor tem o seu próprio banco: toda questão guarda o `uid` do
+/// dono e as consultas filtram por ele.
+///
 /// Estrutura de cada documento (ID = id da questão):
+///   uid          (string)  dono da questão (professor)
 ///   subject      (string)  matéria
 ///   statement    (string)  enunciado
 ///   alternatives (array)   5 strings
@@ -22,30 +27,39 @@ class QuestionRepository {
 
   static const String nomeColecao = 'questoes';
 
+  /// UID do professor logado.
+  String get _uid => FirebaseAuth.instance.currentUser!.uid;
+
   CollectionReference<Map<String, dynamic>> get _colecao =>
       _firestore.collection(nomeColecao);
 
-  /// Fica "ouvindo" o banco: sempre que alguém cria, edita ou exclui
-  /// uma questão, a lista é emitida de novo automaticamente.
+  /// Fica "ouvindo" o banco do professor logado: sempre que ele cria,
+  /// edita ou exclui uma questão, a lista é emitida de novo.
   Stream<List<Question>> observar() {
-    return _colecao.snapshots().map(_converter);
+    return _colecao
+        .where('uid', isEqualTo: _uid)
+        .snapshots()
+        .map(_converter);
   }
 
-  /// Busca todas as questões uma única vez (usado na tela Criar Prova).
+  /// Busca todas as questões do professor uma única vez (usado na tela
+  /// Criar Prova).
   Future<List<Question>> buscarTodas() async {
-    final snapshot = await _colecao.get();
+    final snapshot = await _colecao.where('uid', isEqualTo: _uid).get();
     return _converter(snapshot);
   }
 
   Future<void> adicionar(Question questao) {
     return _colecao.add({
       ...questao.toMap(),
+      'uid': _uid,
       'criadoEm': FieldValue.serverTimestamp(),
       'atualizadoEm': FieldValue.serverTimestamp(),
     }).timeout(tempoLimiteGravacao);
   }
 
   Future<void> atualizar(Question questao) {
+    // O uid não é reenviado: o update mantém o dono original.
     return _colecao.doc(questao.id).update({
       ...questao.toMap(),
       'atualizadoEm': FieldValue.serverTimestamp(),
@@ -56,14 +70,16 @@ class QuestionRepository {
     return _colecao.doc(id).delete().timeout(tempoLimiteGravacao);
   }
 
-  /// Copia o banco fictício da N1 (50 questões) para o Firestore.
-  /// Usa o id original (q001...) como ID do documento, então rodar duas
-  /// vezes não duplica nada.
+  /// Copia o banco fictício da N1 (50 questões) para o Firestore do
+  /// professor logado. O ID do documento é "{uid}_{id original}", então
+  /// cada professor tem a sua cópia e rodar duas vezes não duplica nada.
   Future<void> importarQuestoes(List<Question> questoes) {
+    final uid = _uid;
     final batch = _firestore.batch();
     for (final questao in questoes) {
-      batch.set(_colecao.doc(questao.id), {
+      batch.set(_colecao.doc('${uid}_${questao.id}'), {
         ...questao.toMap(),
+        'uid': uid,
         'criadoEm': FieldValue.serverTimestamp(),
         'atualizadoEm': FieldValue.serverTimestamp(),
       });
