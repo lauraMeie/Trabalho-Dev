@@ -71,6 +71,14 @@ class SideNavBar extends StatelessWidget {
             },
           ),
           _NavItem(
+            icon: Icons.edit_note,
+            label: 'Editar Provas',
+            onTap: () {
+              Navigator.of(context).maybePop();
+              Navigator.of(context).pushNamed(AppRoutes.editarProvas);
+            },
+          ),
+          _NavItem(
             icon: Icons.fact_check_outlined,
             label: 'Corrigir Prova',
             onTap: () {

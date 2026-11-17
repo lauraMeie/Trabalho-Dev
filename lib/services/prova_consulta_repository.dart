@@ -15,7 +15,9 @@ class ProvaConsultaRepository {
   static const int _limitePorBatch = 450;
 
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> listar() async {
-    final resultado = await _firestore.collection(nomeColecao).get()
+    final resultado = await _firestore
+        .collection(nomeColecao)
+        .get()
         .timeout(const Duration(seconds: 15));
     final documentos = resultado.docs.toList();
     documentos.sort((a, b) {
@@ -29,12 +31,16 @@ class ProvaConsultaRepository {
 
   Future<ProvaGerada> buscar(String id) async {
     final referencia = _firestore.collection(nomeColecao).doc(id);
-    final principal = await referencia.get().timeout(const Duration(seconds: 15));
+    final principal =
+        await referencia.get().timeout(const Duration(seconds: 15));
     if (!principal.exists) throw StateError('Prova não encontrada.');
     final dados = principal.data()!;
-    final individuais = await referencia.collection(nomeSubcolecao).get()
+    final individuais = await referencia
+        .collection(nomeSubcolecao)
+        .get()
         .timeout(const Duration(seconds: 15));
-    final documentos = individuais.docs.toList()..sort((a,b) => a.id.compareTo(b.id));
+    final documentos = individuais.docs.toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
     return ProvaGerada(
       nome: dados['nome'] as String? ?? '',
       turmaNome: dados['turmaNome'] as String? ?? '',
@@ -49,7 +55,8 @@ class ProvaConsultaRepository {
           aluno: mapa['aluno'] as String?,
           matricula: mapa['matricula'] as String?,
           questoes: (mapa['questoes'] as List? ?? const [])
-              .map((q) => GeneratedQuestion.fromMap(Map<String, dynamic>.from(q as Map)))
+              .map((q) =>
+                  GeneratedQuestion.fromMap(Map<String, dynamic>.from(q as Map)))
               .toList(),
         );
       }).toList(),
@@ -60,24 +67,62 @@ class ProvaConsultaRepository {
   /// Não permite alterar a quantidade de provas individuais.
   Future<void> atualizar(String id, ProvaGerada prova) async {
     final referencia = _firestore.collection(nomeColecao).doc(id);
-    final existentes = await referencia.collection(nomeSubcolecao).get()
+    final existentes = await referencia
+        .collection(nomeSubcolecao)
+        .get()
         .timeout(const Duration(seconds: 15));
-    final documentos = existentes.docs.toList()..sort((a,b) => a.id.compareTo(b.id));
+    final documentos = existentes.docs.toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
     if (documentos.length != prova.provas.length) {
-      throw StateError('Não é possível alterar a quantidade de provas individuais.');
+      throw StateError(
+          'Não é possível alterar a quantidade de provas individuais.');
     }
     final operacoes = <void Function(WriteBatch)>[
       (batch) => batch.update(referencia, prova.toMapPrincipal()),
       for (var i = 0; i < documentos.length; i++)
-        (batch) => batch.update(documentos[i].reference, prova.provas[i].toMap()),
+        (batch) =>
+            batch.update(documentos[i].reference, prova.provas[i].toMap()),
     ];
-    for (var inicio = 0; inicio < operacoes.length; inicio += _limitePorBatch) {
+    for (var inicio = 0;
+        inicio < operacoes.length;
+        inicio += _limitePorBatch) {
       final fim = inicio + _limitePorBatch > operacoes.length
-          ? operacoes.length : inicio + _limitePorBatch;
+          ? operacoes.length
+          : inicio + _limitePorBatch;
       final batch = _firestore.batch();
-      for (final operacao in operacoes.sublist(inicio, fim)) { operacao(batch); }
+      for (final operacao in operacoes.sublist(inicio, fim)) {
+        operacao(batch);
+      }
       await batch.commit().timeout(const Duration(seconds: 15));
     }
   }
 
+  /// Exclui a prova e todas as provas individuais (subcoleção).
+  /// O Firestore não apaga subcoleções automaticamente, então os
+  /// documentos individuais são removidos primeiro e o principal por último.
+  Future<void> excluir(String id) async {
+    final referencia = _firestore.collection(nomeColecao).doc(id);
+    final existentes = await referencia
+        .collection(nomeSubcolecao)
+        .get()
+        .timeout(const Duration(seconds: 15));
+
+    final operacoes = <void Function(WriteBatch)>[
+      for (final doc in existentes.docs) (batch) => batch.delete(doc.reference),
+      (batch) => batch.delete(referencia),
+    ];
+
+    for (var inicio = 0;
+        inicio < operacoes.length;
+        inicio += _limitePorBatch) {
+      final fim = inicio + _limitePorBatch > operacoes.length
+          ? operacoes.length
+          : inicio + _limitePorBatch;
+      final batch = _firestore.batch();
+      for (final operacao in operacoes.sublist(inicio, fim)) {
+        operacao(batch);
+      }
+      await batch.commit().timeout(const Duration(seconds: 15));
+    }
+  }
 }
