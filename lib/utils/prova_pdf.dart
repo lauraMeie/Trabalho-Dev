@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../models/prova_gerada.dart';
+import '../services/qr_prova_codec.dart';
 import 'exam_generator.dart';
 
 /// Monta o PDF da prova para impressão: cabeçalho, identificação do
@@ -17,6 +18,7 @@ class ProvaPdf {
 
   static Future<Uint8List> gerar(
     ProvaGerada prova, {
+    required String provaId,
     pw.ThemeData? tema,
   }) async {
     if (prova.provas.isEmpty) {
@@ -29,26 +31,51 @@ class ProvaPdf {
       theme: tema,
     );
 
-    for (final versao in prova.provas) {
-      documento.addPage(_paginas(prova, versao));
+    for (var i = 0; i < prova.provas.length; i++) {
+      final versao = prova.provas[i];
+      // ProvaRepository grava os documentos individuais com IDs 0000,
+      // 0001, 0002... na mesma ordem de ProvaGerada.provas.
+      final individualId = i.toString().padLeft(4, '0');
+      final payloadQr = QrProvaCodec.codificar(provaId, individualId);
+      documento.addPage(_paginas(prova, versao, payloadQr));
     }
 
     return documento.save();
   }
 
-  static pw.MultiPage _paginas(ProvaGerada prova, ProvaDoAluno versao) {
+  static pw.MultiPage _paginas(
+    ProvaGerada prova,
+    ProvaDoAluno versao,
+    String payloadQr,
+  ) {
     return pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.all(36),
-      footer: (contexto) => pw.Align(
-        alignment: pw.Alignment.centerRight,
-        child: pw.Text(
-          'Página ${contexto.pageNumber} de ${contexto.pagesCount}',
-          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
-        ),
+      footer: (contexto) => pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
+        children: [
+          pw.BarcodeWidget(
+            barcode: pw.Barcode.qrCode(
+              errorCorrectLevel: pw.BarcodeQRCorrectionLevel.high,
+            ),
+            data: payloadQr,
+            width: 42,
+            height: 42,
+          ),
+          pw.SizedBox(width: 6),
+          pw.Text(
+            'Identificação individual',
+            style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey700),
+          ),
+          pw.Spacer(),
+          pw.Text(
+            'Página ${contexto.pageNumber} de ${contexto.pagesCount}',
+            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+          ),
+        ],
       ),
       build: (contexto) => [
-        _cabecalho(prova, versao),
+        _cabecalho(prova, versao, payloadQr),
         pw.SizedBox(height: 18),
         ..._questoes(prova, versao),
       ],
@@ -58,18 +85,55 @@ class ProvaPdf {
   // ---------------------------------------------------------------------
   // Cabeçalho + identificação
   // ---------------------------------------------------------------------
-  static pw.Widget _cabecalho(ProvaGerada prova, ProvaDoAluno versao) {
+  static pw.Widget _cabecalho(
+    ProvaGerada prova,
+    ProvaDoAluno versao,
+    String payloadQr,
+  ) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text(
-          prova.nome,
-          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
-        ),
-        pw.SizedBox(height: 2),
-        pw.Text(
-          'Turma: ${prova.turmaNome}',
-          style: const pw.TextStyle(fontSize: 11),
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Expanded(
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    prova.nome,
+                    style: pw.TextStyle(
+                      fontSize: 18,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(height: 2),
+                  pw.Text(
+                    'Turma: ${prova.turmaNome}',
+                    style: const pw.TextStyle(fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(width: 12),
+            pw.Column(
+              children: [
+                pw.BarcodeWidget(
+                  barcode: pw.Barcode.qrCode(
+                    errorCorrectLevel: pw.BarcodeQRCorrectionLevel.high,
+                  ),
+                  data: payloadQr,
+                  width: 76,
+                  height: 76,
+                ),
+                pw.SizedBox(height: 3),
+                pw.Text(
+                  'Identificação da prova',
+                  style: const pw.TextStyle(fontSize: 7),
+                ),
+              ],
+            ),
+          ],
         ),
         pw.SizedBox(height: 12),
         pw.Container(

@@ -12,8 +12,11 @@ class ProvaPdfService {
   ProvaPdfService._();
 
   /// Abre a visualização/impressão do PDF.
-  static Future<void> imprimir(ProvaGerada prova) async {
-    final bytes = await _gerarBytes(prova);
+  static Future<void> imprimir(
+    ProvaGerada prova, {
+    required String provaId,
+  }) async {
+    final bytes = await _gerarBytes(prova, provaId: provaId);
     await Printing.layoutPdf(
       name: _nomeArquivo(prova),
       onLayout: (_) async => bytes,
@@ -21,14 +24,20 @@ class ProvaPdfService {
   }
 
   /// Baixa/compartilha o PDF como arquivo.
-  static Future<void> baixar(ProvaGerada prova) async {
-    final bytes = await _gerarBytes(prova);
+  static Future<void> baixar(
+    ProvaGerada prova, {
+    required String provaId,
+  }) async {
+    final bytes = await _gerarBytes(prova, provaId: provaId);
     await Printing.sharePdf(bytes: bytes, filename: _nomeArquivo(prova));
   }
 
-  static Future<Uint8List> _gerarBytes(ProvaGerada prova) async {
+  static Future<Uint8List> _gerarBytes(
+    ProvaGerada prova, {
+    required String provaId,
+  }) async {
     final tema = await _carregarTema();
-    return ProvaPdf.gerar(prova, tema: tema);
+    return ProvaPdf.gerar(prova, provaId: provaId, tema: tema);
   }
 
   /// Usa a fonte Roboto (baixada na hora) para os acentos e símbolos
