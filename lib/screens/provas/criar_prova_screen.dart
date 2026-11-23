@@ -50,8 +50,9 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
   // tenta avançar (para não "gritar" com a tela ainda vazia).
   bool _mostrarErros = false;
 
-  // Última prova salva com sucesso (usada para gerar o PDF dela).
+  // Última prova salva com sucesso (usada para gerar o PDF e os QR Codes).
   ProvaGerada? _provaSalva;
+  String? _provaIdSalva;
 
   // Prova que o professor está vendo na etapa 4. É gerada UMA vez ao
   // entrar na etapa (e não a cada rebuild), para que o que aparece na
@@ -201,7 +202,10 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
   void _irParaEtapa(int etapa) {
     _etapaAtual = etapa;
     _mostrarErros = false;
-    if (etapa < 3) _provaSalva = null;
+    if (etapa < 3) {
+      _provaSalva = null;
+      _provaIdSalva = null;
+    }
     if (etapa == 3) _gerarPreview();
   }
 
@@ -765,12 +769,31 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
     final turma = _config.turma!;
     final selecionadas = _questoesSelecionadas;
 
-    // Mesma prova para todos: salva exatamente o que está no preview.
-    // Individualizada: gera uma prova própria (embaralhamento
-    // independente) para cada aluno da turma (RF04/RF13).
+    // O QR Code precisa identificar também o aluno. Por isso, mesmo quando
+    // todos recebem as mesmas questões, salvamos uma cópia individual por
+    // aluno. Assim cada um recebe um QR Code próprio e a correção recupera
+    // o nome, a matrícula e o gabarito da pessoa certa.
+    if (turma.alunos.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Cadastre os alunos da turma antes de gerar provas com QR Code individual.',
+          ),
+        ),
+      );
+      return;
+    }
+
     final List<ProvaDoAluno> provas;
     if (_config.mesmaProvaParaTodos) {
-      provas = [ProvaDoAluno(questoes: _previewQuestoes)];
+      provas = [
+        for (final aluno in turma.alunos)
+          ProvaDoAluno(
+            aluno: aluno.nome,
+            matricula: aluno.matricula,
+            questoes: List<GeneratedQuestion>.from(_previewQuestoes),
+          ),
+      ];
     } else {
       provas = [
         for (final aluno in turma.alunos)
@@ -799,11 +822,12 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
 
     setState(() => _salvando = true);
     try {
-      await _provaRepository.salvar(prova);
+      final provaId = await _provaRepository.salvar(prova);
       if (!mounted) return;
       setState(() {
         _salvando = false;
         _provaSalva = prova;
+        _provaIdSalva = provaId;
       });
 
       final querPdf = await showDialog<bool>(
@@ -841,15 +865,16 @@ class _CriarProvaScreenState extends State<CriarProvaScreen> {
   /// Gera o PDF da prova que acabou de ser salva (imprimir ou baixar).
   Future<void> _exportarPdf({bool baixar = false}) async {
     final prova = _provaSalva;
-    if (prova == null || _gerandoPdf) return;
+    final provaId = _provaIdSalva;
+    if (prova == null || provaId == null || _gerandoPdf) return;
 
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _gerandoPdf = true);
     try {
       if (baixar) {
-        await ProvaPdfService.baixar(prova);
+        await ProvaPdfService.baixar(prova, provaId: provaId);
       } else {
-        await ProvaPdfService.imprimir(prova);
+        await ProvaPdfService.imprimir(prova, provaId: provaId);
       }
     } catch (erro) {
       debugPrint('Erro ao gerar PDF: $erro');
