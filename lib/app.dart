@@ -11,6 +11,7 @@ import 'screens/relatorios/relatorios_screen.dart';
 import 'screens/login/register_screen.dart';
 import 'screens/provas/minhas_provas_screen.dart';
 import 'auth_gate.dart';
+import 'screens/perfil/profile_screen.dart';
 
 class ProvaLab extends StatelessWidget {
   const ProvaLab({super.key});
@@ -32,6 +33,7 @@ class ProvaLab extends StatelessWidget {
         AppRoutes.relatorios: (context) => const RelatoriosScreen(),
         AppRoutes.cadastro: (context) => const RegisterScreen(),
         AppRoutes.home: (context) => const AuthGate(),
+        AppRoutes.perfil: (context) => const ProfileScreen(),
       },
       builder: (context, child) {
         return Stack(

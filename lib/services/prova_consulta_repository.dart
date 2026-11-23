@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/prova_gerada.dart';
 import '../utils/exam_generator.dart';
@@ -14,9 +15,16 @@ class ProvaConsultaRepository {
   static const String nomeSubcolecao = 'individuais';
   static const int _limitePorBatch = 450;
 
+  /// Lista só as provas do professor logado.
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> listar() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      throw StateError('Você precisa estar logado para ver as provas.');
+    }
+
     final resultado = await _firestore
         .collection(nomeColecao)
+        .where('uid', isEqualTo: uid)
         .get()
         .timeout(const Duration(seconds: 15));
     final documentos = resultado.docs.toList();
@@ -78,6 +86,7 @@ class ProvaConsultaRepository {
           'Não é possível alterar a quantidade de provas individuais.');
     }
     final operacoes = <void Function(WriteBatch)>[
+      // update só altera os campos enviados, então o uid do dono é mantido.
       (batch) => batch.update(referencia, prova.toMapPrincipal()),
       for (var i = 0; i < documentos.length; i++)
         (batch) =>

@@ -13,5 +13,6 @@ class AppRoutes {
   static const String corrigirProvaResultado = '/corrigir-prova/resultado';
   static const String relatorios = '/relatorios';
   static const cadastro = '/cadastro';
-  
+  static const String perfil = '/perfil';
 }
+  

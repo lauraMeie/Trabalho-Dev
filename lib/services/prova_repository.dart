@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/prova_gerada.dart';
 import '../utils/firestore_errors.dart';
@@ -9,6 +10,7 @@ import '../utils/firestore_errors.dart';
 ///
 /// Estrutura:
 ///   provas/{provaId}                    -> dados gerais (nome, turma, layout...)
+///                                          + uid do professor dono da prova
 ///   provas/{provaId}/individuais/{n}    -> uma prova por aluno (ou uma só,
 ///                                          se for "mesma prova para todos"),
 ///                                          com as questões JÁ embaralhadas
@@ -27,12 +29,18 @@ class ProvaRepository {
 
   /// Salva a prova e devolve o ID do documento criado.
   Future<String> salvar(ProvaGerada prova) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      throw StateError('Você precisa estar logado para salvar a prova.');
+    }
+
     final docPrincipal = _firestore.collection(nomeColecao).doc();
     final subcolecao = docPrincipal.collection(nomeSubcolecao);
 
     final operacoes = <void Function(WriteBatch)>[
       (batch) => batch.set(docPrincipal, {
             ...prova.toMapPrincipal(),
+            'uid': uid, // dono da prova (usado nas regras e nos filtros)
             'criadaEm': FieldValue.serverTimestamp(),
           }),
       for (int i = 0; i < prova.provas.length; i++)

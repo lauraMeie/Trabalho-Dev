@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../routes/app_routes.dart';
 import '../../theme/app_theme.dart';
+import 'verificar_email_screen.dart';
 
 /// Tela de cadastro com Firebase Authentication (e-mail e senha).
-/// Além da conta no Auth, cria o perfil do professor em professores/{uid}.
+/// Envia e-mail de verificação. O perfil em professores/{uid} só é criado
+/// depois da verificação (ver VerificarEmailScreen).
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -20,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmarController = TextEditingController();
   bool _carregando = false;
   bool _ocultarSenha = true;
+  bool _ocultarConfirmacao = true;
 
   @override
   void dispose() {
@@ -47,6 +48,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return 'Login por e-mail/senha não está ativado no Firebase.';
       case 'network-request-failed':
         return 'Sem conexão com a internet.';
+      case 'too-many-requests':
+        return 'Muitas tentativas. Aguarde um pouco e tente de novo.';
       default:
         return 'Erro: $code';
     }
@@ -61,7 +64,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (nome.isEmpty || email.isEmpty || senha.isEmpty || confirmar.isEmpty) {
       return 'Preencha todos os campos.';
     }
-    if (!email.contains('@') || !email.contains('.')) {
+    final emailValido = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailValido.hasMatch(email)) {
       return 'Digite um e-mail válido.';
     }
     if (senha.length < 6) {
@@ -92,30 +96,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       final user = credencial.user!;
       await user.updateDisplayName(nome);
+      await user.sendEmailVerification();
 
-      // Perfil do professor: o ID do documento é o uid, então é único.
-      try {
-        await FirebaseFirestore.instance
-            .collection('professores')
-            .doc(user.uid)
-            .set({
-          'nome': nome,
-          'email': email,
-          'criadoEm': FieldValue.serverTimestamp(),
-        });
-      } catch (_) {
-        // Se o perfil não foi salvo, desfaz a conta para não ficar
-        // um login sem cadastro.
-        await user.delete();
-        rethrow;
-      }
-
+      // O doc em professores só é criado DEPOIS da verificação
+      // (a regra do Firestore exige email_verified == true).
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const VerificarEmailScreen()),
+      );
     } on FirebaseAuthException catch (e) {
       _mostrarMensagem(_traduzirErro(e.code));
-    } on FirebaseException catch (e) {
-      _mostrarMensagem('Não foi possível salvar o perfil: ${e.code}');
     } finally {
       if (mounted) setState(() => _carregando = false);
     }
@@ -178,7 +168,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _nomeController,
                     textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(
-                      hintText: 'Nome completo',
+                      hintText: 'Seu nome',
                       prefixIcon: Icon(Icons.person_outline),
                     ),
                   ),
@@ -210,11 +200,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: AppSpacing.sm),
                   TextField(
                     controller: _confirmarController,
-                    obscureText: _ocultarSenha,
+                    obscureText: _ocultarConfirmacao,
                     onSubmitted: (_) => _cadastrar(),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Confirmar senha',
-                      prefixIcon: Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(_ocultarConfirmacao
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined),
+                        onPressed: () => setState(
+                            () => _ocultarConfirmacao = !_ocultarConfirmacao),
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
