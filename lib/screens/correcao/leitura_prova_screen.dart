@@ -149,7 +149,7 @@ class _LeituraProvaScreenState extends State<LeituraProvaScreen> {
     ];
 
     final resultado = ResultadoCorrecao(
-      id: '', // definido pelo Firestore ao salvar (ver salvarResultado).
+      id: '', // definido ao salvar (ver salvarResultado/idDaCorrecao).
       aluno: aluno,
       turma: widget.prova.turmaNome,
       provaId: widget.prova.provaId,
@@ -160,24 +160,65 @@ class _LeituraProvaScreenState extends State<LeituraProvaScreen> {
     );
 
     try {
-      final resultadoSalvo =
-          await _correcaoRepository.salvarResultado(resultado);
+      final existente = await _correcaoRepository.buscarCorrecaoExistente(
+        CorrecaoRepository.idDaCorrecaoDe(widget.prova, aluno),
+      );
+      if (!mounted) return;
+      if (existente != null && !await _confirmarSubstituicao(existente)) {
+        if (mounted) setState(() => _corrigindo = false);
+        return;
+      }
+
+      final resultadoSalvo = await _correcaoRepository.salvarResultado(
+        resultado,
+        prova: widget.prova,
+      );
       if (!mounted) return;
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          settings:
-              const RouteSettings(name: AppRoutes.corrigirProvaResultado),
+          settings: const RouteSettings(name: AppRoutes.corrigirProvaResultado),
           builder: (_) => ResultadoCorrecaoScreen(resultado: resultadoSalvo),
         ),
       );
     } catch (erro) {
       if (!mounted) return;
       setState(() => _corrigindo = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mensagemDeErro(erro))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(mensagemDeErro(erro))));
     }
+  }
+
+  /// Avisa que esta folha já foi corrigida e pergunta se deve substituir a
+  /// correção anterior. Devolve true só se o professor escolher Substituir.
+  Future<bool> _confirmarSubstituicao(ResultadoCorrecao existente) async {
+    final nota = existente.nota.toStringAsFixed(1).replaceAll('.', ',');
+    final data = existente.corrigidoEm;
+    String doisDigitos(int n) => n.toString().padLeft(2, '0');
+    final dataTexto =
+        '${doisDigitos(data.day)}/${doisDigitos(data.month)}/${data.year}';
+
+    final substituir = await showDialog<bool>(
+      context: context,
+      builder: (contextoDialogo) => AlertDialog(
+        title: const Text('Esta prova já foi corrigida'),
+        content: Text(
+          'Nota $nota em $dataTexto. Deseja substituir pela nova correção?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(contextoDialogo).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(contextoDialogo).pop(true),
+            child: const Text('Substituir'),
+          ),
+        ],
+      ),
+    );
+    return substituir ?? false;
   }
 
   @override
@@ -467,16 +508,12 @@ class _InfoLinha extends StatelessWidget {
         children: [
           Text(
             '$label: ',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           Expanded(
-            child: Text(
-              valor,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            child: Text(valor, style: Theme.of(context).textTheme.bodyMedium),
           ),
         ],
       ),

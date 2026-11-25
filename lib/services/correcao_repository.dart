@@ -32,6 +32,44 @@ class ProvaParaCorrigir {
   });
 }
 
+/// Monta o ID fixo do documento de correção na coleção `correcoes`, para
+/// que corrigir de novo a mesma folha de respostas substitua a correção
+/// anterior em vez de criar outra.
+///
+/// - Prova individual (o aluno veio da própria prova): `provaId_individualId`.
+/// - Mesma prova para todos (o professor digita o nome do aluno):
+///   `provaId_individualId_nome-normalizado`, onde o nome fica em
+///   minúsculas, sem acentos, com espaços trocados por "-" e só [a-z0-9-].
+String idDaCorrecao({
+  required String provaId,
+  required String individualId,
+  String? alunoDigitado,
+}) {
+  final base = '${provaId}_$individualId';
+  if (alunoDigitado == null) return base;
+  return '${base}_${normalizarNomeParaId(alunoDigitado)}';
+}
+
+/// Letras acentuadas e, na mesma posição, a letra sem acento.
+const String _comAcento = 'áàâãäåéèêëíìîïóòôõöúùûüçñýÿ';
+const String _semAcento = 'aaaaaaeeeeiiiiooooouuuucnyy';
+
+/// Normaliza um nome para uso em ID: minúsculas, sem acentos, espaços
+/// (inclusive repetidos ou nas pontas) viram um único "-" e qualquer outro
+/// caractere fora de [a-z0-9-] é descartado.
+String normalizarNomeParaId(String nome) {
+  final semAcento = nome.toLowerCase().split('').map((c) {
+    final i = _comAcento.indexOf(c);
+    return i < 0 ? c : _semAcento[i];
+  }).join();
+  return semAcento
+      .trim()
+      .replaceAll(RegExp(r'\s+'), '-')
+      .replaceAll(RegExp(r'[^a-z0-9-]'), '')
+      .replaceAll(RegExp(r'-+'), '-')
+      .replaceAll(RegExp(r'^-|-$'), '');
+}
+
 /// Exceção lançada quando o QR Code é válido, mas a prova que ele aponta
 /// não existe mais no banco (ex.: foi excluída).
 class ProvaNaoEncontradaException implements Exception {
@@ -117,13 +155,47 @@ class CorrecaoRepository {
 
   // ------------------------------------------------------------ CORREÇÕES
 
-  /// Salva o resultado de UMA correção no Firestore (RF08) e devolve o
-  /// mesmo resultado já com o ID definitivo do documento salvo.
-  /// A correção é gravada com o `uid` do professor logado.
-  Future<ResultadoCorrecao> salvarResultado(ResultadoCorrecao resultado) async {
+  /// ID fixo da correção de [prova] (ver [idDaCorrecao]). Na "mesma prova
+  /// para todos" (`prova.aluno == null`), usa o nome digitado [aluno].
+  static String idDaCorrecaoDe(ProvaParaCorrigir prova, String aluno) {
+    return idDaCorrecao(
+      provaId: prova.provaId,
+      individualId: prova.individualId,
+      alunoDigitado: prova.aluno == null ? aluno : null,
+    );
+  }
+
+  /// Busca a correção já salva com o ID [id] pelo professor logado.
+  /// Devolve null se ainda não existir.
+  ///
+  /// Usa consulta filtrada por `uid` (em vez de `doc(id).get()`) para
+  /// continuar valendo a regra de que cada professor só lê as próprias
+  /// correções, mesmo quando o documento ainda não existe.
+  Future<ResultadoCorrecao?> buscarCorrecaoExistente(String id) async {
+    final snapshot = await _correcoes
+        .where('uid', isEqualTo: _uid)
+        .where(FieldPath.documentId, isEqualTo: id)
+        .limit(1)
+        .get()
+        .timeout(_tempoLimiteLeitura);
+    if (snapshot.docs.isEmpty) return null;
+    final doc = snapshot.docs.first;
+    return ResultadoCorrecao.fromMap(doc.id, doc.data());
+  }
+
+  /// Salva o resultado de UMA correção no Firestore (RF08) com ID fixo
+  /// (ver [idDaCorrecao]): corrigir de novo a mesma folha substitui a
+  /// correção anterior em vez de duplicá-la. [prova] é a prova lida pelo QR
+  /// Code, usada para montar o ID. Devolve o mesmo resultado já com o ID do
+  /// documento. A correção é gravada com o `uid` do professor logado.
+  Future<ResultadoCorrecao> salvarResultado(
+    ResultadoCorrecao resultado, {
+    required ProvaParaCorrigir prova,
+  }) async {
+    final id = idDaCorrecaoDe(prova, resultado.aluno);
     final dados = {...resultado.toMap(), 'uid': _uid};
-    final doc = await _correcoes.add(dados).timeout(tempoLimiteGravacao);
-    return ResultadoCorrecao.fromMap(doc.id, dados);
+    await _correcoes.doc(id).set(dados).timeout(tempoLimiteGravacao);
+    return ResultadoCorrecao.fromMap(id, dados);
   }
 
   /// Fica "ouvindo" as correções do professor logado: a tela de Relatórios
