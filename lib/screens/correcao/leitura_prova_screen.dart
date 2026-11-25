@@ -153,6 +153,8 @@ class _LeituraProvaScreenState extends State<LeituraProvaScreen> {
       aluno: aluno,
       turma: widget.prova.turmaNome,
       provaId: widget.prova.provaId,
+      provaNome: widget.prova.provaNome,
+      matricula: widget.prova.matricula ?? '',
       corrigidoEm: DateTime.now(),
       respostas: respostas,
     );

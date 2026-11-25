@@ -26,6 +26,7 @@ class ExcelExportService {
 
     sheet.appendRow([
       xlsx.TextCellValue('Aluno'),
+      xlsx.TextCellValue('Matrícula'),
       xlsx.TextCellValue('Turma'),
       xlsx.TextCellValue('Prova'),
       xlsx.TextCellValue('Nota'),
@@ -38,8 +39,9 @@ class ExcelExportService {
     for (final resultado in resultados) {
       sheet.appendRow([
         xlsx.TextCellValue(resultado.aluno),
+        xlsx.TextCellValue(resultado.matricula),
         xlsx.TextCellValue(resultado.turma),
-        xlsx.TextCellValue(resultado.provaId),
+        xlsx.TextCellValue(resultado.provaExibicao),
         xlsx.DoubleCellValue(resultado.nota),
         xlsx.IntCellValue(resultado.acertos),
         xlsx.IntCellValue(resultado.erros),
