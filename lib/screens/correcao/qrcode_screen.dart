@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../routes/app_routes.dart';
 import '../../services/correcao_repository.dart';
@@ -52,8 +51,10 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
   Future<void> _processarCodigo(String codigo) async {
     final payload = QrProvaCodec.decodificar(codigo);
     if (payload == null) {
-      setState(() => _erro =
-          'Esse QR Code não é de uma folha de respostas do Provas App.');
+      setState(
+        () => _erro =
+            'Esse QR Code não é de uma folha de respostas do Provas App.',
+      );
       return;
     }
 
@@ -76,7 +77,8 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
     } on ProvaNaoEncontradaException {
       if (!mounted) return;
       setState(() {
-        _erro = 'Essa prova não existe mais no banco de dados (talvez já '
+        _erro =
+            'Essa prova não existe mais no banco de dados (talvez já '
             'tenha sido excluída).';
         _processando = false;
       });
@@ -84,56 +86,13 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _erro = 'Não foi possível buscar a prova. Verifique sua conexão '
+        _erro =
+            'Não foi possível buscar a prova. Verifique sua conexão '
             'e tente novamente.';
         _processando = false;
       });
       unawaited(_controller.start());
     }
-  }
-
-  Future<void> _mostrarQrDeTeste() async {
-    final messenger = ScaffoldMessenger.of(context);
-    final payload = await _repositorio.buscarQrDeTeste();
-    if (!mounted) return;
-
-    if (payload == null) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Nenhuma prova foi gerada ainda em "Criar Prova" — gere uma '
-            'prova primeiro para ter um QR Code para testar.',
-          ),
-        ),
-      );
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('QR Code de teste'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Aponte a câmera de outro dispositivo (ou a sua, trocando de '
-              'tela) para este código, só para testar a leitura.',
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            QrImageView(data: payload.codificar(), size: 200),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Fechar'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -190,8 +149,9 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
             ],
             const SizedBox(height: AppSpacing.md),
             TextButton.icon(
-              onPressed: () =>
-                  setState(() => _mostrarEntradaManual = !_mostrarEntradaManual),
+              onPressed: () => setState(
+                () => _mostrarEntradaManual = !_mostrarEntradaManual,
+              ),
               icon: const Icon(Icons.keyboard_outlined),
               label: Text(
                 _mostrarEntradaManual
@@ -215,12 +175,6 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
                 child: const Text('Buscar prova'),
               ),
             ],
-            const Spacer(),
-            OutlinedButton.icon(
-              onPressed: _mostrarQrDeTeste,
-              icon: const Icon(Icons.qr_code_2),
-              label: const Text('Ver QR Code de teste'),
-            ),
           ],
         ),
       ),
@@ -242,8 +196,11 @@ class _SemCameraAviso extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.videocam_off_outlined,
-              size: 48, color: AppColors.textSecondary),
+          const Icon(
+            Icons.videocam_off_outlined,
+            size: 48,
+            color: AppColors.textSecondary,
+          ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Não foi possível acessar a câmera. Verifique a permissão do '
@@ -256,4 +213,3 @@ class _SemCameraAviso extends StatelessWidget {
     );
   }
 }
-

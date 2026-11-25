@@ -48,7 +48,7 @@ class ProvaNaoEncontradaException implements Exception {
 /// guardam o campo `uid` do dono e as consultas filtram por ele.
 class CorrecaoRepository {
   CorrecaoRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -82,8 +82,10 @@ class CorrecaoRepository {
   /// As regras do Firestore recusam a leitura de provas de outro professor
   /// (vira FirebaseException com code 'permission-denied').
   Future<ProvaParaCorrigir> buscarProvaDoAluno(QrProvaPayload payload) async {
-    final docPrincipal =
-        await _provas.doc(payload.provaId).get().timeout(_tempoLimiteLeitura);
+    final docPrincipal = await _provas
+        .doc(payload.provaId)
+        .get()
+        .timeout(_tempoLimiteLeitura);
     if (!docPrincipal.exists) throw const ProvaNaoEncontradaException();
 
     final docIndividual = await _provas
@@ -113,38 +115,6 @@ class CorrecaoRepository {
     );
   }
 
-  /// Usado só como auxílio de teste: a tela de Criar Prova (RF05, de outro
-  /// colega do grupo) ainda não imprime o QR Code na folha de respostas,
-  /// então aqui pegamos a prova mais recente do professor logado para gerar
-  /// um QR Code de demonstração e validar a leitura pela câmera ponta a
-  /// ponta.
-  Future<QrProvaPayload?> buscarQrDeTeste() async {
-    // Filtra por uid e ordena no app (evita criar índice composto).
-    final snap = await _provas
-        .where('uid', isEqualTo: _uid)
-        .get()
-        .timeout(_tempoLimiteLeitura);
-    if (snap.docs.isEmpty) return null;
-
-    final docs = snap.docs.toList()
-      ..sort((a, b) => _dataComoTexto(b.data()['criadaEm'])
-          .compareTo(_dataComoTexto(a.data()['criadaEm'])));
-
-    final provaId = docs.first.id;
-    final individuais = await _provas
-    .doc(provaId)
-    .collection('individuais')
-    .where('uid', isEqualTo: _uid)
-    .limit(1)
-    .get()
-    .timeout(_tempoLimiteLeitura);
-
-    return QrProvaPayload(
-      provaId: provaId,
-      individualId: individuais.docs.first.id,
-    );
-  }
-
   // ------------------------------------------------------------ CORREÇÕES
 
   /// Salva o resultado de UMA correção no Firestore (RF08) e devolve o
@@ -160,13 +130,13 @@ class CorrecaoRepository {
   /// atualiza sozinha sempre que uma nova prova é corrigida, sem precisar
   /// recarregar. Mais recentes primeiro.
   Stream<List<ResultadoCorrecao>> observarResultados() {
-    return _correcoes
-        .where('uid', isEqualTo: _uid)
-        .snapshots()
-        .map((snapshot) {
+    return _correcoes.where('uid', isEqualTo: _uid).snapshots().map((snapshot) {
       final docs = snapshot.docs.toList()
-        ..sort((a, b) => _dataComoTexto(b.data()['corrigidoEm'])
-            .compareTo(_dataComoTexto(a.data()['corrigidoEm'])));
+        ..sort(
+          (a, b) => _dataComoTexto(
+            b.data()['corrigidoEm'],
+          ).compareTo(_dataComoTexto(a.data()['corrigidoEm'])),
+        );
       return docs
           .map((doc) => ResultadoCorrecao.fromMap(doc.id, doc.data()))
           .toList();
