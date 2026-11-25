@@ -102,6 +102,15 @@ A tela de resultado mostra:
 - a **nota final** e o total de **acertos**, **erros** e questões **em branco**;
 - o **detalhe de cada questão**: a resposta do aluno (verde se acertou, vermelho se errou) e a resposta correta.
 
+### Corrigir de novo a mesma folha
+
+Cada folha de respostas tem **uma correção só**. Se você corrigir de novo uma folha que já foi corrigida (por exemplo, para ajustar uma resposta lida errado), o app avisa antes de salvar:
+
+<img src="img/correcao/14-prova-ja-corrigida.png" width="300" alt="Aviso de prova já corrigida">
+
+- **Substituir:** a nova correção toma o lugar da anterior. O aluno continua aparecendo uma vez só na lista e nos relatórios.
+- **Cancelar:** nada é salvo e a correção anterior continua valendo.
+
 ---
 
 ## 7. Consultar as provas já corrigidas
@@ -150,6 +159,7 @@ A planilha `.xlsx` traz, para cada prova corrigida: **Aluno, Turma, Prova, Nota,
 | *"A folha ficou muito pequena na foto"* | Aproxime a câmera, de modo que a folha ocupe quase toda a foto. |
 | *"Não reconheci esta folha de respostas"* | Use a folha impressa pelo app; folhas de outros modelos não são lidas. |
 | Uma resposta foi lida errado | Toque na alternativa certa antes de corrigir. A leitura é sempre conferível. |
+| *"Esta prova já foi corrigida"* | A folha já tinha uma correção. Toque em **Substituir** para trocar pela nova ou em **Cancelar** para manter a anterior. |
 | Questão com aviso vermelho | O aluno marcou mais de uma bolinha. Escolha a válida ou deixe "Em branco". |
 | *"Não foi possível abrir a câmera"* ou *"...acessar a câmera"* | Permita o acesso à câmera nas configurações do celular ou use **Escolher foto** / o código manual. |
 | Relatórios vazios | Nenhuma prova foi corrigida ainda com a sua conta. |
