@@ -61,7 +61,7 @@ class CorrigirProvaScreen extends StatelessWidget {
                   _EtapaFluxo(
                     numero: '2',
                     titulo: 'Leitura das respostas',
-                    descricao: 'Marque as alternativas da folha de respostas.',
+                    descricao: 'Fotografe a folha e o app lê as marcações.',
                   ),
                   SizedBox(height: AppSpacing.sm),
                   _EtapaFluxo(
