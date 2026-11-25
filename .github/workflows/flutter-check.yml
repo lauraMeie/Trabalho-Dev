@@ -3,9 +3,9 @@ name: Flutter Check
 # Roda toda vez que alguém enviar código para a main ou abrir um Pull Request
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   analyze:
@@ -17,7 +17,8 @@ jobs:
       # Instala o Flutter DENTRO do robô (não na sua máquina)
       - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: "stable"
+          flutter-version: "3.47.8"
 
       # Baixa as dependências do projeto (equivalente ao "flutter pub get")
       - name: Instalar dependências

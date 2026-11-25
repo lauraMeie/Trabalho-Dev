@@ -27,7 +27,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Usamos a câmera para ler o QR Code da folha de respostas e identificar a prova a ser corrigida.</string>
+	<string>Usamos a câmera para ler o QR Code e as alternativas marcadas na folha de respostas.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Usamos suas fotos para ler uma folha de respostas já fotografada.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
