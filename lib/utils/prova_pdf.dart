@@ -6,6 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../models/prova_gerada.dart';
 import '../services/qr_prova_codec.dart';
 import 'exam_generator.dart';
+import 'folha_respostas_pdf.dart';
 
 /// Monta o PDF da prova para impressão: cabeçalho, identificação do
 /// aluno e questões (RF14: respeita colunas e tamanho da fonte).
@@ -38,6 +39,14 @@ class ProvaPdf {
       final individualId = i.toString().padLeft(4, '0');
       final payloadQr = QrProvaCodec.codificar(provaId, individualId);
       documento.addPage(_paginas(prova, versao, payloadQr));
+      FolhaRespostasPdf.paginas(
+        nomeProva: prova.nome,
+        turma: prova.turmaNome,
+        aluno: versao.aluno,
+        matricula: versao.matricula,
+        totalQuestoes: versao.questoes.length,
+        payloadQr: payloadQr,
+      ).forEach(documento.addPage);
     }
 
     return documento.save();
