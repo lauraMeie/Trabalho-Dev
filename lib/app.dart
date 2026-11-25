@@ -7,6 +7,7 @@ import 'screens/turmas/turmas_screen.dart';
 import 'screens/banco_questoes_screen.dart';
 import 'screens/provas/criar_prova_screen.dart';
 import 'screens/correcao/corrigir_prova_screen.dart';
+import 'screens/correcao/provas_corrigidas_screen.dart';
 import 'screens/relatorios/relatorios_screen.dart';
 import 'screens/login/register_screen.dart';
 import 'screens/provas/minhas_provas_screen.dart';
@@ -29,6 +30,8 @@ class ProvaLab extends StatelessWidget {
         AppRoutes.criarProva: (context) => const CriarProvaScreen(),
         AppRoutes.editarProvas: (context) => const MinhasProvasScreen(),
         AppRoutes.corrigirProva: (context) => const CorrigirProvaScreen(),
+        AppRoutes.provasCorrigidas: (context) =>
+            const ProvasCorrigidasScreen(),
         AppRoutes.relatorios: (context) => const RelatoriosScreen(),
         AppRoutes.cadastro: (context) => const RegisterScreen(),
         AppRoutes.home: (context) => const AuthGate(),
