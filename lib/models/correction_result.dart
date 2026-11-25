@@ -56,6 +56,14 @@ class ResultadoCorrecao {
   final String aluno;
   final String turma;
   final String provaId;
+
+  /// Nome da prova no momento da correção. Correções antigas (gravadas
+  /// antes deste campo existir) vêm com string vazia.
+  final String provaNome;
+
+  /// Matrícula do aluno, quando a prova foi gerada por aluno. Vazia quando
+  /// não houver (prova única ou correções antigas).
+  final String matricula;
   final DateTime corrigidoEm;
   final List<RespostaCorrigida> respostas;
 
@@ -64,9 +72,15 @@ class ResultadoCorrecao {
     required this.aluno,
     required this.turma,
     required this.provaId,
+    this.provaNome = '',
+    this.matricula = '',
     required this.corrigidoEm,
     required this.respostas,
   });
+
+  /// Texto para exibir a prova: o nome, ou o ID quando o nome estiver
+  /// vazio (correções antigas).
+  String get provaExibicao => provaNome.isNotEmpty ? provaNome : provaId;
 
   int get totalQuestoes => respostas.length;
   int get acertos => respostas.where((r) => r.correta).length;
@@ -84,6 +98,8 @@ class ResultadoCorrecao {
       'aluno': aluno,
       'turma': turma,
       'provaId': provaId,
+      'provaNome': provaNome,
+      'matricula': matricula,
       'corrigidoEm': corrigidoEm.toIso8601String(),
       'respostas': respostas.map((r) => r.toMap()).toList(),
     };
@@ -100,6 +116,8 @@ class ResultadoCorrecao {
       aluno: map['aluno'] as String? ?? '',
       turma: map['turma'] as String? ?? '',
       provaId: map['provaId'] as String? ?? '',
+      provaNome: map['provaNome'] as String? ?? '',
+      matricula: map['matricula'] as String? ?? '',
       corrigidoEm: corrigidoEm,
       respostas: (map['respostas'] as List? ?? const [])
           .whereType<Map>()

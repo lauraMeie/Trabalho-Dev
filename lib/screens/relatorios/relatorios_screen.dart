@@ -132,7 +132,7 @@ class _ConteudoRelatorios extends StatelessWidget {
               ),
               title: Text(resultado.aluno),
               subtitle: Text(
-                '${resultado.turma} · ${resultado.provaId} · '
+                '${resultado.turma} · ${resultado.provaExibicao} · '
                 '${resultado.acertos}/${resultado.totalQuestoes} acertos',
               ),
               trailing: Text(
