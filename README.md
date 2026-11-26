@@ -504,7 +504,7 @@ Observações:
 
 | Tarefa | Data | Status |
 |---|---|---|
-| Manual do usuário do Banco de Questões: abrir o banco, carregar questões de exemplo, criar, editar e excluir questão, regras do formulário, prévia de prova gerada e problemas comuns ([docs/manual/banco-de-questoes.md](docs/manual/banco-de-questoes.md)) | 26/11 | Concluído |
+| Manual do usuário do Banco de Questões: abrir o banco, carregar questões de exemplo, criar, editar e excluir questão, regras do formulário, prévia de prova gerada e problemas comuns ([#51](https://github.com/lauraMeie/Trabalho-Dev/pull/51)) | 26/11 | Concluído |
 
 ---
 
