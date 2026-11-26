@@ -178,6 +178,13 @@ class _HomeContent extends StatelessWidget {
                               .pushNamed(AppRoutes.criarProva),
                         ),
                         MenuTile(
+                          icon: Icons.edit_note,
+                          title: 'Editar Provas',
+                          subtitle: 'Visualize, edite e exclua provas',
+                          onTap: () => Navigator.of(context)
+                              .pushNamed(AppRoutes.editarProvas),
+                        ),
+                        MenuTile(
                           icon: Icons.fact_check_outlined,
                           title: 'Corrigir Prova',
                           subtitle: 'Correção automatizada das provas',

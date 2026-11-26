@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/correction_result.dart';
 import '../utils/exam_generator.dart';
@@ -31,6 +32,44 @@ class ProvaParaCorrigir {
   });
 }
 
+/// Monta o ID fixo do documento de correção na coleção `correcoes`, para
+/// que corrigir de novo a mesma folha de respostas substitua a correção
+/// anterior em vez de criar outra.
+///
+/// - Prova individual (o aluno veio da própria prova): `provaId_individualId`.
+/// - Mesma prova para todos (o professor digita o nome do aluno):
+///   `provaId_individualId_nome-normalizado`, onde o nome fica em
+///   minúsculas, sem acentos, com espaços trocados por "-" e só [a-z0-9-].
+String idDaCorrecao({
+  required String provaId,
+  required String individualId,
+  String? alunoDigitado,
+}) {
+  final base = '${provaId}_$individualId';
+  if (alunoDigitado == null) return base;
+  return '${base}_${normalizarNomeParaId(alunoDigitado)}';
+}
+
+/// Letras acentuadas e, na mesma posição, a letra sem acento.
+const String _comAcento = 'áàâãäåéèêëíìîïóòôõöúùûüçñýÿ';
+const String _semAcento = 'aaaaaaeeeeiiiiooooouuuucnyy';
+
+/// Normaliza um nome para uso em ID: minúsculas, sem acentos, espaços
+/// (inclusive repetidos ou nas pontas) viram um único "-" e qualquer outro
+/// caractere fora de [a-z0-9-] é descartado.
+String normalizarNomeParaId(String nome) {
+  final semAcento = nome.toLowerCase().split('').map((c) {
+    final i = _comAcento.indexOf(c);
+    return i < 0 ? c : _semAcento[i];
+  }).join();
+  return semAcento
+      .trim()
+      .replaceAll(RegExp(r'\s+'), '-')
+      .replaceAll(RegExp(r'[^a-z0-9-]'), '')
+      .replaceAll(RegExp(r'-+'), '-')
+      .replaceAll(RegExp(r'^-|-$'), '');
+}
+
 /// Exceção lançada quando o QR Code é válido, mas a prova que ele aponta
 /// não existe mais no banco (ex.: foi excluída).
 class ProvaNaoEncontradaException implements Exception {
@@ -42,15 +81,21 @@ class ProvaNaoEncontradaException implements Exception {
 /// Lê a prova gerada pela tela Criar Prova (coleção `provas`, ver
 /// ProvaRepository) a partir do ID identificado no QR Code da folha de
 /// respostas.
+///
+/// Cada professor só enxerga as próprias provas e correções: os documentos
+/// guardam o campo `uid` do dono e as consultas filtram por ele.
 class CorrecaoRepository {
   CorrecaoRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
   /// Tempo máximo esperando o Firestore responder uma LEITURA. Sem
   /// internet, o Firestore pode ficar pendente em vez de dar erro.
   static const Duration _tempoLimiteLeitura = Duration(seconds: 10);
+
+  /// UID do professor logado.
+  String get _uid => FirebaseAuth.instance.currentUser!.uid;
 
   CollectionReference<Map<String, dynamic>> get _provas =>
       _firestore.collection('provas');
@@ -61,12 +106,24 @@ class CorrecaoRepository {
   CollectionReference<Map<String, dynamic>> get _correcoes =>
       _firestore.collection(nomeColecaoCorrecoes);
 
+  /// Converte um campo de data (String ISO ou Timestamp) em texto
+  /// comparável, para ordenar no app sem precisar de índice composto.
+  String _dataComoTexto(dynamic valor) {
+    if (valor is Timestamp) return valor.toDate().toIso8601String();
+    return valor?.toString() ?? '';
+  }
+
   /// Busca a prova (e o gabarito) identificados por um QR Code já
   /// decodificado. Lança [ProvaNaoEncontradaException] se a prova ou a
   /// versão individual dela não existir mais.
+  ///
+  /// As regras do Firestore recusam a leitura de provas de outro professor
+  /// (vira FirebaseException com code 'permission-denied').
   Future<ProvaParaCorrigir> buscarProvaDoAluno(QrProvaPayload payload) async {
-    final docPrincipal =
-        await _provas.doc(payload.provaId).get().timeout(_tempoLimiteLeitura);
+    final docPrincipal = await _provas
+        .doc(payload.provaId)
+        .get()
+        .timeout(_tempoLimiteLeitura);
     if (!docPrincipal.exists) throw const ProvaNaoEncontradaException();
 
     final docIndividual = await _provas
@@ -96,60 +153,65 @@ class CorrecaoRepository {
     );
   }
 
-  /// Usado só como auxílio de teste: a tela de Criar Prova (RF05, de outro
-  /// colega do grupo) ainda não imprime o QR Code na folha de respostas,
-  /// então aqui pegamos a prova mais recente já salva no banco para gerar
-  /// um QR Code de demonstração e validar a leitura pela câmera ponta a
-  /// ponta.
-  Future<QrProvaPayload?> buscarQrDeTeste() async {
-    final maisRecente = await _provas
-        .orderBy('criadaEm', descending: true)
-        .limit(1)
-        .get()
-        .timeout(_tempoLimiteLeitura);
-    if (maisRecente.docs.isEmpty) return null;
+  // ------------------------------------------------------------ CORREÇÕES
 
-    final provaId = maisRecente.docs.first.id;
-    final individuais = await _provas
-        .doc(provaId)
-        .collection('individuais')
-        .limit(1)
-        .get()
-        .timeout(_tempoLimiteLeitura);
-    if (individuais.docs.isEmpty) return null;
-
-    return QrProvaPayload(
-      provaId: provaId,
-      individualId: individuais.docs.first.id,
+  /// ID fixo da correção de [prova] (ver [idDaCorrecao]). Na "mesma prova
+  /// para todos" (`prova.aluno == null`), usa o nome digitado [aluno].
+  static String idDaCorrecaoDe(ProvaParaCorrigir prova, String aluno) {
+    return idDaCorrecao(
+      provaId: prova.provaId,
+      individualId: prova.individualId,
+      alunoDigitado: prova.aluno == null ? aluno : null,
     );
   }
 
-  // ------------------------------------------------------------ CORREÇÕES
-
-  /// Salva o resultado de UMA correção no Firestore (RF08) e devolve o
-  /// mesmo resultado já com o ID definitivo do documento salvo.
-  Future<ResultadoCorrecao> salvarResultado(ResultadoCorrecao resultado) async {
-    final doc = await _correcoes
-        .add(resultado.toMap())
-        .timeout(tempoLimiteGravacao);
-    return ResultadoCorrecao.fromMap(doc.id, resultado.toMap());
+  /// Busca a correção já salva com o ID [id] pelo professor logado.
+  /// Devolve null se ainda não existir.
+  ///
+  /// Usa consulta filtrada por `uid` (em vez de `doc(id).get()`) para
+  /// continuar valendo a regra de que cada professor só lê as próprias
+  /// correções, mesmo quando o documento ainda não existe.
+  Future<ResultadoCorrecao?> buscarCorrecaoExistente(String id) async {
+    final snapshot = await _correcoes
+        .where('uid', isEqualTo: _uid)
+        .where(FieldPath.documentId, isEqualTo: id)
+        .limit(1)
+        .get()
+        .timeout(_tempoLimiteLeitura);
+    if (snapshot.docs.isEmpty) return null;
+    final doc = snapshot.docs.first;
+    return ResultadoCorrecao.fromMap(doc.id, doc.data());
   }
 
-  /// Fica "ouvindo" as correções já feitas: a tela de Relatórios atualiza
-  /// sozinha sempre que uma nova prova é corrigida, sem precisar recarregar.
-  /// Mais recentes primeiro.
+  /// Salva o resultado de UMA correção no Firestore (RF08) com ID fixo
+  /// (ver [idDaCorrecao]): corrigir de novo a mesma folha substitui a
+  /// correção anterior em vez de duplicá-la. [prova] é a prova lida pelo QR
+  /// Code, usada para montar o ID. Devolve o mesmo resultado já com o ID do
+  /// documento. A correção é gravada com o `uid` do professor logado.
+  Future<ResultadoCorrecao> salvarResultado(
+    ResultadoCorrecao resultado, {
+    required ProvaParaCorrigir prova,
+  }) async {
+    final id = idDaCorrecaoDe(prova, resultado.aluno);
+    final dados = {...resultado.toMap(), 'uid': _uid};
+    await _correcoes.doc(id).set(dados).timeout(tempoLimiteGravacao);
+    return ResultadoCorrecao.fromMap(id, dados);
+  }
+
+  /// Fica "ouvindo" as correções do professor logado: a tela de Relatórios
+  /// atualiza sozinha sempre que uma nova prova é corrigida, sem precisar
+  /// recarregar. Mais recentes primeiro.
   Stream<List<ResultadoCorrecao>> observarResultados() {
-    return _correcoes
-        .orderBy('corrigidoEm', descending: true)
-        .snapshots()
-        .map(_converter);
-  }
-
-  List<ResultadoCorrecao> _converter(
-    QuerySnapshot<Map<String, dynamic>> snapshot,
-  ) {
-    return snapshot.docs
-        .map((doc) => ResultadoCorrecao.fromMap(doc.id, doc.data()))
-        .toList();
+    return _correcoes.where('uid', isEqualTo: _uid).snapshots().map((snapshot) {
+      final docs = snapshot.docs.toList()
+        ..sort(
+          (a, b) => _dataComoTexto(
+            b.data()['corrigidoEm'],
+          ).compareTo(_dataComoTexto(a.data()['corrigidoEm'])),
+        );
+      return docs
+          .map((doc) => ResultadoCorrecao.fromMap(doc.id, doc.data()))
+          .toList();
+    });
   }
 }

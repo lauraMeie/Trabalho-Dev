@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import '../routes/app_routes.dart';
 import '../theme/app_theme.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-/// Barra lateral de navegação, usada na Home (como painel fixo em
-/// telas largas, ou dentro de um Drawer em telas estreitas).
 class SideNavBar extends StatelessWidget {
   const SideNavBar({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final nomeUsuario = FirebaseAuth.instance.currentUser?.displayName;
+
     return Container(
       width: 240,
       color: AppColors.surface,
@@ -71,6 +72,14 @@ class SideNavBar extends StatelessWidget {
             },
           ),
           _NavItem(
+            icon: Icons.edit_note,
+            label: 'Editar Provas',
+            onTap: () {
+              Navigator.of(context).maybePop();
+              Navigator.of(context).pushNamed(AppRoutes.editarProvas);
+            },
+          ),
+          _NavItem(
             icon: Icons.fact_check_outlined,
             label: 'Corrigir Prova',
             onTap: () {
@@ -90,11 +99,23 @@ class SideNavBar extends StatelessWidget {
           const Divider(height: 1, color: AppColors.border),
           const SizedBox(height: AppSpacing.sm),
           _NavItem(
+            icon: Icons.account_circle_outlined,
+            label: (nomeUsuario == null || nomeUsuario.isEmpty)
+                ? 'Meu perfil'
+                : nomeUsuario,
+            onTap: () {
+              Navigator.of(context).maybePop();
+              Navigator.of(context).pushNamed(AppRoutes.perfil);
+            },
+          ),
+          _NavItem(
             icon: Icons.logout,
             label: 'Sair da conta',
             iconColor: Colors.red.shade400,
             textColor: Colors.red.shade400,
-            onTap: () {
+            onTap: () async {
+              await FirebaseAuth.instance.signOut();
+              if (!context.mounted) return;
               Navigator.of(context).pushNamedAndRemoveUntil(
                 AppRoutes.login,
                 (route) => false,
@@ -150,12 +171,15 @@ class _NavItem extends StatelessWidget {
               children: [
                 Icon(icon, size: 20, color: effectiveIconColor),
                 const SizedBox(width: AppSpacing.sm),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: effectiveTextColor,
-                    fontWeight:
-                        selected ? FontWeight.w600 : FontWeight.normal,
+                Expanded(
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: effectiveTextColor,
+                      fontWeight:
+                          selected ? FontWeight.w600 : FontWeight.normal,
+                    ),
                   ),
                 ),
               ],

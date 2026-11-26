@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_theme.dart';
+import 'verificar_email_screen.dart';
 
 /// Tela de login com Firebase Authentication (e-mail e senha).
+/// Só libera o acesso se o e-mail estiver verificado.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -15,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
   bool _carregando = false;
+  bool _ocultarSenha = true;
 
   @override
   void dispose() {
@@ -61,14 +65,46 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_camposPreenchidos()) return;
     setState(() => _carregando = true);
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final auth = FirebaseAuth.instance;
+      await auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _senhaController.text,
       );
+
+      // Garante que o estado de verificação e o token estão atualizados.
+      await auth.currentUser!.reload();
+      await auth.currentUser!.getIdToken(true);
+      final user = auth.currentUser!;
+
+      if (!mounted) return;
+
+      // E-mail ainda não verificado: manda para a tela de verificação.
+      if (!user.emailVerified) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const VerificarEmailScreen()),
+        );
+        return;
+      }
+
+      // Verificado, mas o perfil pode não ter sido criado
+      // (ex.: clicou no link e fechou o app antes de voltar).
+      final ref =
+          FirebaseFirestore.instance.collection('professores').doc(user.uid);
+      final doc = await ref.get();
+      if (!doc.exists) {
+        await ref.set({
+          'nome': user.displayName ?? '',
+          'email': user.email,
+          'criadoEm': FieldValue.serverTimestamp(),
+        });
+      }
+
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } on FirebaseAuthException catch (e) {
       _mostrarMensagem(_traduzirErro(e.code));
+    } on FirebaseException catch (e) {
+      _mostrarMensagem('Não foi possível carregar o perfil: ${e.code}');
     } finally {
       if (mounted) setState(() => _carregando = false);
     }
@@ -151,11 +187,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: AppSpacing.sm),
                   TextField(
                     controller: _senhaController,
-                    obscureText: true,
+                    obscureText: _ocultarSenha,
+                    autofillHints: const [AutofillHints.password],
                     onSubmitted: (_) => _entrar(),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Senha',
-                      prefixIcon: Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(_ocultarSenha
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined),
+                        tooltip:
+                            _ocultarSenha ? 'Mostrar senha' : 'Ocultar senha',
+                        onPressed: () =>
+                            setState(() => _ocultarSenha = !_ocultarSenha),
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -196,8 +242,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     onPressed: _carregando
-    ? null
-    : () => Navigator.of(context).pushNamed(AppRoutes.cadastro),
+                        ? null
+                        : () => Navigator.of(context)
+                            .pushNamed(AppRoutes.cadastro),
                     child: const Text('Criar conta'),
                   ),
                 ],

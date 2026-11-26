@@ -47,6 +47,8 @@ void main() {
         aluno: 'Ana Souza',
         turma: '3º Ano A',
         provaId: 'PROVA-123',
+        provaNome: 'Avaliação Bimestral',
+        matricula: '2026001',
         corrigidoEm: DateTime(2026, 10, 20, 14, 30),
         respostas: const [
           RespostaCorrigida(
@@ -69,10 +71,27 @@ void main() {
       expect(reconstruido.aluno, original.aluno);
       expect(reconstruido.turma, original.turma);
       expect(reconstruido.provaId, original.provaId);
+      expect(reconstruido.provaNome, 'Avaliação Bimestral');
+      expect(reconstruido.matricula, '2026001');
+      expect(reconstruido.provaExibicao, 'Avaliação Bimestral');
       expect(reconstruido.corrigidoEm, original.corrigidoEm);
       expect(reconstruido.respostas.length, 1);
       expect(reconstruido.acertos, original.acertos);
       expect(reconstruido.nota, original.nota);
+    });
+
+    test('lê correção antiga sem provaNome/matricula usando valor padrão', () {
+      final reconstruido = ResultadoCorrecao.fromMap('doc-antigo', {
+        'aluno': 'Bruno Lima',
+        'turma': '2º Ano B',
+        'provaId': 'PROVA-ANTIGA',
+        'corrigidoEm': DateTime(2026, 9, 1).toIso8601String(),
+        'respostas': const [],
+      });
+
+      expect(reconstruido.provaNome, '');
+      expect(reconstruido.matricula, '');
+      expect(reconstruido.provaExibicao, 'PROVA-ANTIGA');
     });
   });
 }

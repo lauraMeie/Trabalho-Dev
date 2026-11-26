@@ -4,6 +4,8 @@ import '../../models/correction_result.dart';
 import '../../routes/app_routes.dart';
 import '../../services/correcao_repository.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/firestore_errors.dart';
+import 'provas_corrigidas_screen.dart';
 import 'qrcode_screen.dart';
 
 /// Ponto de partida do fluxo de correção (RF06/RF07): explica os passos e
@@ -21,16 +23,16 @@ class CorrigirProvaScreen extends StatelessWidget {
           IconButton(
             tooltip: 'Voltar para a Home',
             icon: const Icon(Icons.home_outlined),
-            onPressed: () => Navigator.of(context)
-                .popUntil((route) => route.settings.name == AppRoutes.home),
+            onPressed: () => Navigator.of(
+              context,
+            ).popUntil((route) => route.settings.name == AppRoutes.home),
           ),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
-          Icon(Icons.fact_check_outlined,
-              size: 64, color: AppColors.primary),
+          Icon(Icons.fact_check_outlined, size: 64, color: AppColors.primary),
           const SizedBox(height: AppSpacing.md),
           Text(
             'Correção automatizada',
@@ -59,7 +61,7 @@ class CorrigirProvaScreen extends StatelessWidget {
                   _EtapaFluxo(
                     numero: '2',
                     titulo: 'Leitura das respostas',
-                    descricao: 'Marque as alternativas da folha de respostas.',
+                    descricao: 'Fotografe a folha e o app lê as marcações.',
                   ),
                   SizedBox(height: AppSpacing.sm),
                   _EtapaFluxo(
@@ -106,47 +108,59 @@ class _UltimasCorrecoes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<ResultadoCorrecao>>(
-      stream: repositorio.observarResultados(),
-      builder: (context, snapshot) {
-        final ultimasCorrecoes =
-            (snapshot.data ?? const []).take(3).toList();
-        if (ultimasCorrecoes.isEmpty) return const SizedBox.shrink();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Text(
-              'Últimas correções',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            ...ultimasCorrecoes.map(
-              (resultado) => Card(
-                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-                    foregroundColor: AppColors.primary,
-                    child: Text(resultado.nota.toStringAsFixed(0)),
-                  ),
-                  title: Text(resultado.aluno),
-                  subtitle: Text(
-                    '${resultado.turma} · ${resultado.acertos}/${resultado.totalQuestoes} acertos',
-                  ),
-                  trailing: Text(
-                    resultado.nota.toStringAsFixed(1),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
+            Expanded(
+              child: Text(
+                'Últimas correções',
+                style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
+            TextButton(
+              onPressed: () =>
+                  Navigator.of(context).pushNamed(AppRoutes.provasCorrigidas),
+              child: const Text('Ver todas'),
+            ),
           ],
-        );
-      },
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        StreamBuilder<List<ResultadoCorrecao>>(
+          stream: repositorio.observarResultados(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Text(
+                mensagemDeErro(snapshot.error!),
+                style: Theme.of(context).textTheme.bodyMedium,
+              );
+            }
+            if (!snapshot.hasData) {
+              return const Padding(
+                padding: EdgeInsets.all(AppSpacing.md),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final ultimasCorrecoes = snapshot.data!.take(3).toList();
+            if (ultimasCorrecoes.isEmpty) {
+              return Text(
+                'Nenhuma prova corrigida ainda.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              );
+            }
+
+            return Column(
+              children: ultimasCorrecoes
+                  .map(
+                    (resultado) => ResultadoCorrecaoTile(resultado: resultado),
+                  )
+                  .toList(),
+            );
+          },
+        ),
+      ],
     );
   }
 }

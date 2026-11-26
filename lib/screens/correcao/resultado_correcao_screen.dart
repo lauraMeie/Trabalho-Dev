@@ -41,7 +41,7 @@ class ResultadoCorrecaoScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   Text(
-                    '${resultado.turma} · ${resultado.provaId}',
+                    '${resultado.turma} · ${resultado.provaExibicao}',
                     style: Theme.of(context).textTheme.bodyMedium,
                     textAlign: TextAlign.center,
                   ),
