@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+
 import '../../data/turmas_repository.dart';
 import '../../models/turma.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/busca_utils.dart';
+import '../../utils/firestore_errors.dart';
 import 'cadastro_turma_screen.dart';
+import 'campo_busca.dart';
 import 'turma_detalhe_screen.dart';
 
 /// Tela de lista de turmas (N2 — dados reais do Firestore), com CRUD completo.
@@ -15,6 +19,14 @@ class TurmasScreen extends StatefulWidget {
 
 class _TurmasScreenState extends State<TurmasScreen> {
   final _repo = TurmasRepository();
+  final _buscaController = TextEditingController();
+  String _busca = '';
+
+  @override
+  void dispose() {
+    _buscaController.dispose();
+    super.dispose();
+  }
 
   void _abrirCadastroTurma([Turma? turma]) {
     Navigator.of(context).push(
@@ -50,9 +62,7 @@ class _TurmasScreenState extends State<TurmasScreen> {
     try {
       await _repo.excluirTurma(turma.id!);
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Não foi possível excluir a turma: $e')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(mensagemDeErro(e))));
     }
   }
 
@@ -68,7 +78,7 @@ class _TurmasScreenState extends State<TurmasScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Text(
-                  'Erro ao carregar as turmas: ${snapshot.error}',
+                  mensagemDeErro(snapshot.error!),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -83,55 +93,87 @@ class _TurmasScreenState extends State<TurmasScreen> {
             return const Center(child: Text('Nenhuma turma cadastrada ainda.'));
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            itemCount: turmas.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (context, index) {
-              final turma = turmas[index];
-              return Card(
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  leading: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppRadius.button),
-                    ),
-                    child: const Icon(
-                      Icons.groups_outlined,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  title: Text(
-                    turma.nome,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  subtitle: Text('${turma.quantidadeAlunos} aluno(s)'),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (valor) {
-                      if (valor == 'editar') _abrirCadastroTurma(turma);
-                      if (valor == 'excluir') _excluirTurma(turma);
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'editar', child: Text('Editar')),
-                      PopupMenuItem(value: 'excluir', child: Text('Excluir')),
-                    ],
-                  ),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => TurmaDetalheScreen(turma: turma),
+          final visiveis = BuscaUtils.filtrarTurmas(turmas, _busca);
+          return Column(
+            children: [
+              CampoBusca(
+                controller: _buscaController,
+                hint: 'Buscar turma',
+                onChanged: (valor) => setState(() => _busca = valor),
+              ),
+              Expanded(
+                child: visiveis.isEmpty
+                    ? const Center(child: Text('Nenhuma turma encontrada.'))
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        itemCount: visiveis.length,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: AppSpacing.sm),
+                        itemBuilder: (context, index) {
+                          final turma = visiveis[index];
+                          return Card(
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.md,
+                                vertical: AppSpacing.sm,
+                              ),
+                              leading: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.button,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.groups_outlined,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              title: Text(
+                                turma.nome,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              subtitle: Text(
+                                '${turma.quantidadeAlunos} aluno(s)',
+                              ),
+                              trailing: PopupMenuButton<String>(
+                                onSelected: (valor) {
+                                  if (valor == 'editar') {
+                                    _abrirCadastroTurma(turma);
+                                  }
+                                  if (valor == 'excluir') {
+                                    _excluirTurma(turma);
+                                  }
+                                },
+                                itemBuilder: (_) => const [
+                                  PopupMenuItem(
+                                    value: 'editar',
+                                    child: Text('Editar'),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'excluir',
+                                    child: Text('Excluir'),
+                                  ),
+                                ],
+                              ),
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        TurmaDetalheScreen(turma: turma),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
-              );
-            },
+              ),
+            ],
           );
         },
       ),

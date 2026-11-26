@@ -1,7 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
 import '../../data/turmas_repository.dart';
 import '../../models/turma.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/firestore_errors.dart';
+import '../../utils/texto_utils.dart';
+import '../../utils/turma_validator.dart';
 
 /// Tela de cadastro/edição de turma (N2 — grava no Firestore).
 /// Se `turmaParaEditar` for informado, a tela entra em modo de edição.
@@ -19,6 +25,7 @@ class _CadastroTurmaScreenState extends State<CadastroTurmaScreen> {
   final _repo = TurmasRepository();
   late final TextEditingController _nomeController;
   bool _salvando = false;
+  String? _erroNome;
 
   bool get _editando => widget.turmaParaEditar != null;
 
@@ -40,10 +47,23 @@ class _CadastroTurmaScreenState extends State<CadastroTurmaScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final messenger = ScaffoldMessenger.of(context);
-    final nome = _nomeController.text.trim();
+    final nome = TextoUtils.normalizarEspacos(_nomeController.text);
     setState(() => _salvando = true);
 
     try {
+      final repetido = await _repo.existeTurmaComNome(
+        nome,
+        ignorarTurmaId: widget.turmaParaEditar?.id,
+      );
+      if (repetido) {
+        if (!mounted) return;
+        setState(() {
+          _erroNome = TurmaValidator.erroNomeRepetido;
+          _salvando = false;
+        });
+        return;
+      }
+
       if (_editando) {
         await _repo.atualizarTurma(widget.turmaParaEditar!.id!, nome);
       } else {
@@ -52,10 +72,15 @@ class _CadastroTurmaScreenState extends State<CadastroTurmaScreen> {
       if (!mounted) return;
       Navigator.of(context).pop();
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Não foi possível salvar a turma: $e')),
-      );
-      if (mounted) setState(() => _salvando = false);
+      messenger.showSnackBar(SnackBar(content: Text(mensagemDeErro(e))));
+      if (!mounted) return;
+      if (e is TimeoutException) {
+        // Sem internet: o Firestore guarda a alteração e envia depois.
+        // Fecha a tela para o professor não salvar duas vezes.
+        Navigator.of(context).pop();
+      } else {
+        setState(() => _salvando = false);
+      }
     }
   }
 
@@ -79,9 +104,11 @@ class _CadastroTurmaScreenState extends State<CadastroTurmaScreen> {
                   hintText: 'Ex.: 3º Ano C - ADS',
                   prefixIcon: Icon(Icons.groups_outlined),
                 ),
-                validator: (value) => (value == null || value.trim().isEmpty)
-                    ? 'Informe o nome da turma'
-                    : null,
+                forceErrorText: _erroNome,
+                onChanged: (_) {
+                  if (_erroNome != null) setState(() => _erroNome = null);
+                },
+                validator: TurmaValidator.nome,
               ),
               const SizedBox(height: AppSpacing.lg),
               ElevatedButton(
