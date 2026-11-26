@@ -81,6 +81,8 @@ O app só deixa salvar se tudo estiver certo. Quando falta algo, a mensagem apar
 
 > **Importante:** editar uma questão no banco **não altera provas já geradas**. Cada prova guarda uma cópia das questões no momento em que foi criada, para que as folhas já impressas continuem batendo com o gabarito. Para corrigir uma questão dentro de uma prova já salva, use **Minhas Provas → Visualizar Prova → Editar questão** (veja a seção [Criar Prova](README.md)).
 
+<img src="../telas/17-editar-questao.jpg" width="300" alt="Editar questão dentro de uma prova salva (Minhas Provas → Visualizar Prova)">
+
 ---
 
 ## 5. Excluir uma questão
