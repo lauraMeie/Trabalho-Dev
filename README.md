@@ -7,12 +7,15 @@
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 ![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)
 ![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)
 
-![Status](https://img.shields.io/badge/status-em%20desenvolvimento-F5A623?style=flat-square)
-![Entrega](https://img.shields.io/badge/entrega%20atual-N2-3D348B?style=flat-square)
+![Status](https://img.shields.io/badge/status-concluído-2EA043?style=flat-square)
+![Entrega](https://img.shields.io/badge/entrega%20atual-N3-3D348B?style=flat-square)
 ![Licença](https://img.shields.io/badge/licença-uso%20acadêmico-7B4FA6?style=flat-square)
+
+📘 **[Manual do usuário](docs/manual/README.md)**
 
 </div>
 
@@ -22,7 +25,7 @@
 |---|
 | Laura Meier |
 | Tiago Spezia |
-| Nicolas Dellani |
+| Nicolas Renan Dellani |
 | Henrique Roberti Ribeiro |
 | Phelipe Gonçalves Blanco |
 
@@ -38,6 +41,8 @@
 - [6. Estrutura de Pastas](#6-estrutura-de-pastas)
 - [7. Como Executar o Projeto](#7-como-executar-o-projeto)
 - [8. Backlog de Atividades da N2](#8-backlog-de-atividades-da-n2)
+- [9. Backlog de Atividades da N3](#9-backlog-de-atividades-da-n3)
+- [📘 Manual do usuário](docs/manual/README.md)
 
 ---
 
@@ -45,15 +50,24 @@
 
 📌 **N1**
 
-O Provas App é um aplicativo para professores que lidam com grandes volumes de correção de provas. Hoje, a criação de questões, a geração de provas e a correção são feitas em ferramentas separadas ou manualmente, e professores chegam a corrigir de 200 a 400 provas por semana, o que consome tempo e atrasa a devolução dos resultados aos alunos.
+O Provas App é um aplicativo Android para professores que lidam com grandes volumes de correção de provas. Hoje, a criação de questões, a geração de provas e a correção são feitas em ferramentas separadas ou manualmente, e professores chegam a corrigir de 200 a 400 provas por semana, o que consome tempo e atrasa a devolução dos resultados aos alunos.
 
-O app reúne tudo em um único sistema, da criação da prova até a correção automática, com uma interface minimalista, simples e fácil de usar.
+O app reúne tudo em um único sistema, da criação da prova até a correção automática pela câmera do celular, com uma interface minimalista, simples e fácil de usar.
 
 **Escopo por fase**
 
 - **N1 (concluída):** telas navegáveis entre si (Home → Turmas → Banco de Questões → Criar Prova → Corrigir Prova → Relatórios), com dados fictícios e padrão visual consistente.
-- **N2 (concluída):** integração real com o **Firebase** (Authentication e Cloud Firestore): login, cadastro e recuperação de senha; Home com números reais; CRUD de turmas, alunos e questões; criação de provas com geração de PDF; correção por QR code com resultado salvo na coleção `correcoes`; relatórios em tempo real com exportação para Excel; regras de segurança que exigem usuário autenticado.
-- **Previsto para as próximas fases:** restrição de acesso por dono (cada professor ver somente os próprios dados) e geração do QR code impresso na folha de respostas (hoje a identificação é lida a partir da prova já salva no banco).
+- **N2 (concluída):** integração real com o **Firebase** (Authentication e Cloud Firestore): login, cadastro e recuperação de senha; Home com números reais; CRUD de turmas, alunos e questões; criação de provas com geração de PDF; correção por QR Code com resultado salvo na coleção `correcoes`; relatórios em tempo real com exportação para Excel; regras de segurança que exigem usuário autenticado.
+- **N3 (concluída):** app completo e integrado ao banco, entregue como **APK para Android**:
+  - **Folha de respostas** impressa junto com a prova, em página separada do caderno de questões, com **QR Code** de identificação, bolinhas A–E e marcadores para a câmera.
+  - **Correção pela câmera:** o QR Code identifica a prova e o aluno, a foto da folha preenche automaticamente as alternativas marcadas (com aviso de questão em branco ou com mais de uma marcação) e o professor confere antes de corrigir.
+  - **Resultado salvo** com nome da prova e matrícula; corrigir de novo a mesma folha **substitui** a correção anterior, sem duplicar; lista de todas as **provas corrigidas**.
+  - **Relatórios** e **planilha Excel** com resumo, uma aba por turma (alunos × provas, com média) e a alternativa marcada em cada questão, com **compartilhamento** pelo Android (Drive, WhatsApp, e-mail).
+  - **Minhas Provas:** ver, editar, excluir e **baixar ou imprimir o PDF de novo**, mantendo o mesmo QR Code.
+  - **Dados separados por professor** (campo `uid` em turmas, questões, provas e correções), cadastro com **verificação de e-mail** e tela de **perfil**.
+  - **Turmas:** bloqueio de matrícula e nome de turma repetidos e **busca** por nome ou matrícula.
+  - **Manual do usuário** com passo a passo e prints ([docs/manual](docs/manual/README.md)).
+- **Não implementado:** importação da lista de alunos a partir de uma planilha (RF12).
 
 ## 2. Requisitos
 
@@ -61,26 +75,26 @@ O app reúne tudo em um único sistema, da criação da prova até a correção 
 
 ### 2.1 Funcionais (RF)
 
-| Código | Requisito |
-|---|---|
-| RF01 | Gerar provas automaticamente a partir de um banco de questões |
-| RF02 | Cadastrar e organizar um banco de questões |
-| RF03 | Randomizar a ordem das questões e alternativas entre provas de uma turma |
-| RF04 | Escolher entre usar as mesmas questões para todos ou gerar provas diferentes por aluno |
-| RF05 | Gerar folha de respostas separada da prova, com QR code de identificação |
-| RF06 | Ler o QR code para identificar a prova/gabarito |
-| RF07 | Corrigir automaticamente a prova a partir das alternativas marcadas |
-| RF08 | Calcular a nota automaticamente após a correção |
-| RF09 | Exibir relatório das avaliações corrigidas |
-| RF10 | Exportar resultados em planilha (Excel) |
-| RF11 | Gerar estatística por questão (alternativa mais marcada) |
-| RF12 | Importar lista de alunos |
-| RF13 | Gerar prova individualizada e identificável por aluno |
-| RF14 | Editar o layout da prova gerada |
-| RF15 | Exigir autenticação (login ou cadastro) para acessar o app; os dados são gravados no banco apenas para usuários autenticados |
-| RF16 | Conseguir editar e remover questões, turmas e provas |
-| RF17 | Permitir cadastro de novo usuário e recuperação de senha por e-mail |
-| RF18 | Exibir na Home a quantidade real de turmas, alunos e provas |
+| Código | Requisito | Situação na N3 |
+|---|---|---|
+| RF01 | Gerar provas automaticamente a partir de um banco de questões | ✅ |
+| RF02 | Cadastrar e organizar um banco de questões | ✅ |
+| RF03 | Randomizar a ordem das questões e alternativas entre provas de uma turma | ✅ |
+| RF04 | Escolher entre usar as mesmas questões para todos ou gerar provas diferentes por aluno | ✅ |
+| RF05 | Gerar folha de respostas separada da prova, com QR code de identificação | ✅ |
+| RF06 | Ler o QR code para identificar a prova/gabarito | ✅ |
+| RF07 | Corrigir automaticamente a prova a partir das alternativas marcadas | ✅ (leitura da folha pela câmera) |
+| RF08 | Calcular a nota automaticamente após a correção | ✅ |
+| RF09 | Exibir relatório das avaliações corrigidas | ✅ |
+| RF10 | Exportar resultados em planilha (Excel) | ✅ |
+| RF11 | Gerar estatística por questão (alternativa mais marcada) | ✅ |
+| RF12 | Importar lista de alunos | ❌ não implementado |
+| RF13 | Gerar prova individualizada e identificável por aluno | ✅ |
+| RF14 | Editar o layout da prova gerada | ✅ (colunas, fonte e questões) |
+| RF15 | Exigir autenticação (login ou cadastro) para acessar o app; os dados são gravados no banco apenas para usuários autenticados | ✅ |
+| RF16 | Conseguir editar e remover questões, turmas e provas | ✅ |
+| RF17 | Permitir cadastro de novo usuário e recuperação de senha por e-mail | ✅ (com verificação de e-mail) |
+| RF18 | Exibir na Home a quantidade real de turmas, alunos e provas | ✅ |
 
 > **Mudança em relação à v1:** o RF15 original previa navegação sem login. Na N2 o app passou a exigir autenticação para abrir, pois os dados ficam no banco e pertencem a um usuário.
 
@@ -97,52 +111,76 @@ O app reúne tudo em um único sistema, da criação da prova até a correção 
 | RNF07 | Os dados devem ser persistidos em banco de dados real (Cloud Firestore) |
 | RNF08 | Senhas gerenciadas pelo Firebase Authentication, sem armazenamento próprio |
 | RNF09 | Mensagens de erro claras e em português |
+| RNF10 | Cada professor acessa apenas os próprios dados (regras do Firestore e campo `uid`) |
+| RNF11 | Instalar e funcionar em celular Android real (APK) |
 
 ## 3. Telas do Sistema
 
-📌 **N1**
+📌 **N3** (prints do APK rodando em um celular Android)
 
-> Fluxo de navegação: **Login/Cadastro → Home → Turmas / Banco de Questões / Criar Prova / Corrigir Prova / Relatórios**. Abaixo estão as telas principais do app, já na versão integrada ao Firestore (N2).
+> Fluxo de navegação: **Login/Cadastro → Home → Turmas / Banco de Questões / Criar Prova / Minhas Provas / Corrigir Prova / Relatórios / Perfil**. O passo a passo de cada tela está no [manual do usuário](docs/manual/README.md).
 
-![Login](docs/telas/tela-login.png)
-*Login: autenticação real com Firebase Authentication (e-mail e senha), com recuperação de senha por e-mail.*
+### Acesso
 
-![Cadastro](docs/telas/tela-cadastro.png)
-*Cadastro: criação de conta (nome, e-mail, senha e confirmação) via Firebase Authentication.*
+| | | |
+|:---:|:---:|:---:|
+| <img src="docs/telas/01-login.jpg" width="210"><br>*Login com e-mail e senha* | <img src="docs/telas/02-verificar-email.jpg" width="210"><br>*Verificação do e-mail no cadastro* | <img src="docs/telas/03-home.jpg" width="210"><br>*Home com os totais reais* |
+| <img src="docs/telas/04-perfil.jpg" width="210"><br>*Perfil do professor* |  |  |
 
-![Home](docs/telas/tela-home.png)
-*Home: resumo de turmas, alunos e provas, com acesso ao menu principal (Turmas, Banco de Questões, Criar Prova, Corrigir Prova, Relatórios).*
+### Turmas e questões
 
-![Turmas](docs/telas/tela-turmas.png)
-*Turmas: listagem das turmas cadastradas pelo professor, com opção de criar uma nova turma.*
+| | | |
+|:---:|:---:|:---:|
+| <img src="docs/telas/05-turmas.jpg" width="210"><br>*Turmas, com busca* | <img src="docs/telas/06-turma-alunos.jpg" width="210"><br>*Alunos da turma, com busca por nome ou matrícula* | <img src="docs/telas/07-banco-questoes.jpg" width="210"><br>*Banco de Questões* |
+| <img src="docs/telas/08-nova-questao.jpg" width="210"><br>*Cadastro de questão* |  |  |
 
-![Banco de Questões](docs/telas/tela-banco-questoes.png)
-*Banco de Questões: questões reais cadastradas no Firestore, organizadas por matéria.*
+### Provas
 
-![Criar Prova](docs/telas/tela-criar-prova.png)
-*Criar Prova: seleção das questões do banco (com filtro por matéria) para montar uma nova avaliação.*
+| | | |
+|:---:|:---:|:---:|
+| <img src="docs/telas/09-criar-prova-questoes.jpg" width="210"><br>*Criar Prova: seleção das questões* | <img src="docs/telas/10-criar-prova-configurar.jpg" width="210"><br>*Criar Prova: nome, turma e tipo de prova* | <img src="docs/telas/11-criar-prova-embaralhamento.jpg" width="210"><br>*Criar Prova: embaralhar questões e alternativas* |
+| <img src="docs/telas/12-folha-respostas.jpg" width="210"><br>*Folha de respostas com QR Code (página do PDF)* | <img src="docs/telas/13-minhas-provas.jpg" width="210"><br>*Minhas Provas* | <img src="docs/telas/14-visualizar-prova.jpg" width="210"><br>*Visualizar Prova: baixar e imprimir o PDF* |
+| <img src="docs/telas/15-visualizar-questoes.jpg" width="210"><br>*Questões e gabarito de cada versão* | <img src="docs/telas/16-editar-prova.jpg" width="210"><br>*Editar dados e layout* | <img src="docs/telas/17-editar-questao.jpg" width="210"><br>*Editar questão* |
 
-![Escanear QR Code](docs/telas/tela-corrigir-qrcode.png)
-*Escanear QR Code: leitura real pela câmera do dispositivo (ou entrada manual do código), identificando a prova salva no Firestore.*
+### Correção e relatórios
 
-![Leitura da prova](docs/telas/tela-corrigir-leitura.png)
-*Leitura da prova: o professor marca, questão por questão, a alternativa que o aluno escolheu na folha de respostas.*
+| | | |
+|:---:|:---:|:---:|
+| <img src="docs/telas/18-corrigir-prova.jpg" width="210"><br>*Corrigir Prova* | <img src="docs/telas/19-escanear-qr.jpg" width="210"><br>*Leitura do QR Code pela câmera* | <img src="docs/telas/20-leitura-prova.jpg" width="210"><br>*Leitura da folha: fotografar ou escolher a foto* |
+| <img src="docs/telas/21-prova-ja-corrigida.jpg" width="210"><br>*Aviso ao corrigir de novo a mesma folha* | <img src="docs/telas/22-resultado.jpg" width="210"><br>*Resultado da correção* | <img src="docs/telas/23-provas-corrigidas.jpg" width="210"><br>*Provas corrigidas* |
+| <img src="docs/telas/24-relatorios.jpg" width="210"><br>*Relatórios* |  |  |
 
-![Resultado da correção](docs/telas/tela-corrigir-resultado.png)
-*Resultado: nota final calculada automaticamente, com o detalhe de acertos, erros e questões em branco.*
+<img src="docs/manual/img/correcao/13-excel-aba-turma.png" width="440"><br>
+*Planilha exportada para o Excel (aba da turma, com alunos × provas e média), compartilhada pelo Android.*
 
-![Relatórios](docs/telas/tela-relatorios.png)
-*Relatórios: dados reais lidos do Firestore (média geral, turmas, desempenho por matéria, estatística por questão) e exportação para Excel.*
+### 🎥 Vídeos de demonstração
 
-### 🎥 Vídeo de demonstração
-
-[Assista ao vídeo das nossas telas](https://youtube.com/shorts/PHKnWtK98DI?feature=share)
+- N1: [vídeo das telas](https://youtube.com/shorts/PHKnWtK98DI?feature=share)
+- N2: [vídeo das telas](https://youtube.com/shorts/d_52iMSrJM0?feature=share)
 
 ## 4. Modelo de Dados
 
-📌 **N3** (estrutura já em uso desde a N2, incluída aqui como adiantamento)
+📌 **N3**
 
-O Firestore não guarda dados em tabelas com linhas e colunas, ele guarda em coleções de documentos no formato JSON. Abaixo, um exemplo real de documento de cada coleção, seguido do dicionário de dados.
+O Firestore não guarda dados em tabelas com linhas e colunas, ele guarda em coleções de documentos no formato JSON. Abaixo, um exemplo de documento de cada coleção, seguido do dicionário de dados. Todas as coleções principais guardam o `uid` do professor dono, e as regras do Firestore só deixam cada professor ler e gravar os próprios documentos.
+
+### Coleção `professores`
+
+ID do documento: o `uid` do professor no Firebase Authentication.
+
+```json
+{
+  "nome": "Tiago Spezia",
+  "email": "professor@escola.com",
+  "criadoEm": "2026-11-25T19:20:00Z"
+}
+```
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| nome | String | Nome do professor (editável na tela de Perfil) |
+| email | String | E-mail usado no login |
+| criadoEm | Timestamp | Data de criação da conta |
 
 ### Coleção `turmas`
 
@@ -156,23 +194,23 @@ O Firestore não guarda dados em tabelas com linhas e colunas, ele guarda em col
 
 | Campo | Tipo | Descrição |
 |---|---|---|
-| nome | String | Nome da turma |
+| nome | String | Nome da turma (não pode repetir para o mesmo professor) |
 | quantidadeAlunos | number | Quantidade de alunos cadastrados |
-| uid | String | Identificador (Firebase Authentication) do professor dono da turma |
+| uid | String | Professor dono da turma |
 
 ### Subcoleção `turmas/{turmaId}/alunos`
 
 ```json
 {
   "nome": "Ana Beatriz Souza",
-  "matricula": "2024001"
+  "matricula": "2026001"
 }
 ```
 
 | Campo | Tipo | Descrição |
 |---|---|---|
 | nome | String | Nome do aluno |
-| matricula | String | Matrícula do aluno |
+| matricula | String | Matrícula do aluno (não pode repetir na mesma turma) |
 
 ### Coleção `questoes`
 
@@ -181,7 +219,10 @@ O Firestore não guarda dados em tabelas com linhas e colunas, ele guarda em col
   "subject": "Matemática",
   "statement": "Quanto é 7 x 8?",
   "alternatives": ["54", "56", "58", "60", "62"],
-  "correctIndex": 1
+  "correctIndex": 1,
+  "uid": "k3Jx9QmZpLe2VbT8uYhN4wRs7cA1",
+  "criadoEm": "2026-11-20T10:00:00Z",
+  "atualizadoEm": "2026-11-20T10:00:00Z"
 }
 ```
 
@@ -191,6 +232,8 @@ O Firestore não guarda dados em tabelas com linhas e colunas, ele guarda em col
 | statement | String | Enunciado da questão |
 | alternatives | Array\<String\> | As 5 alternativas (A a E) |
 | correctIndex | number | Índice (0 a 4) da alternativa correta |
+| uid | String | Professor dono da questão |
+| criadoEm / atualizadoEm | Timestamp | Datas de criação e da última edição |
 
 ### Coleção `provas`
 
@@ -198,8 +241,15 @@ O Firestore não guarda dados em tabelas com linhas e colunas, ele guarda em col
 {
   "nome": "Avaliação Bimestral",
   "turmaNome": "3º Ano A",
-  "mesmaProvaParaTodos": true,
-  "totalQuestoes": 3
+  "mesmaProvaParaTodos": false,
+  "embaralhouQuestoes": true,
+  "embaralhouAlternativas": true,
+  "colunas": 2,
+  "tamanhoFonte": 12,
+  "totalProvas": 25,
+  "totalQuestoes": 10,
+  "uid": "k3Jx9QmZpLe2VbT8uYhN4wRs7cA1",
+  "criadaEm": "2026-11-24T15:00:00Z"
 }
 ```
 
@@ -207,57 +257,60 @@ O Firestore não guarda dados em tabelas com linhas e colunas, ele guarda em col
 |---|---|---|
 | nome | String | Nome da prova |
 | turmaNome | String | Turma para a qual a prova foi gerada |
-| mesmaProvaParaTodos | boolean | Se todos os alunos recebem a mesma prova ou uma individualizada |
-| totalQuestoes | number | Quantidade de questões da prova |
+| mesmaProvaParaTodos | boolean | Se todos recebem a mesma prova ou uma versão por aluno |
+| embaralhouQuestoes / embaralhouAlternativas | boolean | Se a ordem das questões e das alternativas foi embaralhada |
+| colunas / tamanhoFonte | number | Layout do PDF (1 ou 2 colunas e tamanho da fonte) |
+| totalProvas / totalQuestoes | number | Quantidade de versões (alunos) e de questões |
+| uid | String | Professor dono da prova |
+| criadaEm | Timestamp | Data de criação |
 
 ### Subcoleção `provas/{provaId}/individuais`
+
+ID do documento: `0000`, `0001`, `0002`... na mesma ordem do PDF. O QR Code da folha de respostas guarda `provaId` e esse ID (ex.: `provalab://prova/AbC123XyZ/0001`), por isso editar a prova ou baixar o PDF de novo não invalida as folhas já impressas.
 
 ```json
 {
   "aluno": "Ana Beatriz Souza",
+  "matricula": "2026001",
   "questoes": [
     {
+      "originalId": "q7",
       "subject": "Matemática",
       "statement": "Quanto é 7 x 8?",
-      "alternatives": ["54", "56", "58", "60", "62"],
-      "correctIndex": 1
-    },
-    {
-      "subject": "História",
-      "statement": "Em que ano o Brasil se tornou independente?",
-      "alternatives": ["1500", "1808", "1822", "1889", "1930"],
-      "correctIndex": 2
+      "alternatives": ["58", "54", "62", "56", "60"],
+      "correctIndex": 3
     }
   ],
-  "gabarito": ["B", "C"]
+  "gabarito": ["D"]
 }
 ```
 
 | Campo | Tipo | Descrição |
 |---|---|---|
-| aluno | String | Aluno dono dessa versão da prova (nulo quando é a mesma prova para todos) |
-| questoes | Array\<Map\> | Questões já embaralhadas usadas nessa versão da prova (mesmo formato da coleção `questoes`) |
-| gabarito | Array\<String\> | Gabarito (letras) dessa versão da prova, na ordem das questões |
+| aluno / matricula | String | Aluno dono dessa versão (nulos quando é a mesma prova para todos) |
+| questoes | Array\<Map\> | Questões dessa versão, já embaralhadas (`originalId` aponta para a questão do banco) |
+| gabarito | Array\<String\> | Gabarito (letras) dessa versão, na ordem das questões |
 
 ### Coleção `correcoes`
+
+ID do documento: fixo por folha de respostas (`{provaId}_{individualId}`, e na "mesma prova para todos" também o nome do aluno). Assim, corrigir de novo a mesma folha **substitui** a correção anterior, sem duplicar.
 
 ```json
 {
   "aluno": "Ana Beatriz Souza",
+  "matricula": "2026001",
   "turma": "3º Ano A",
-  "provaId": "PROVA-9325",
-  "corrigidoEm": "2026-10-20T14:30:00.000",
+  "provaId": "AbC123XyZ",
+  "provaNome": "Avaliação Bimestral",
+  "corrigidoEm": "2026-11-25T14:30:00.000",
+  "uid": "k3Jx9QmZpLe2VbT8uYhN4wRs7cA1",
   "respostas": [
     {
-      "questao": "Quanto é 7 x 8?",
-      "alternativas": ["54", "56", "58", "60", "62"],
-      "indiceCorreto": 1,
-      "indiceMarcado": 1
-    },
-    {
-      "questao": "Em que ano o Brasil se tornou independente?",
-      "alternativas": ["1500", "1808", "1822", "1889", "1930"],
-      "indiceCorreto": 2,
+      "questaoId": "q7",
+      "materia": "Matemática",
+      "enunciado": "Quanto é 7 x 8?",
+      "alternativas": ["58", "54", "62", "56", "60"],
+      "indiceCorreto": 3,
       "indiceMarcado": 3
     }
   ]
@@ -266,11 +319,12 @@ O Firestore não guarda dados em tabelas com linhas e colunas, ele guarda em col
 
 | Campo | Tipo | Descrição |
 |---|---|---|
-| aluno | String | Nome do aluno corrigido |
+| aluno / matricula | String | Aluno corrigido e matrícula |
 | turma | String | Turma do aluno |
-| provaId | String | Identificador da prova corrigida |
+| provaId / provaNome | String | ID e nome da prova corrigida |
 | corrigidoEm | String (ISO 8601) | Data/hora da correção |
-| respostas | Array\<Map\> | Cada resposta corrigida: enunciado, alternativas, índice correto e índice marcado |
+| uid | String | Professor que corrigiu |
+| respostas | Array\<Map\> | Cada questão com alternativas, índice correto e índice marcado (`null` = em branco). A nota, os acertos e os erros são calculados a partir daqui |
 
 ## 5. Stack Tecnológica
 
@@ -279,18 +333,17 @@ O Firestore não guarda dados em tabelas com linhas e colunas, ele guarda em col
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-0175C2?style=flat-square&logo=dart&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)
 
-- **Flutter**: framework usado para construir a interface e a navegação do app mobile.
-- **Dart**: linguagem de programação usada no Flutter.
-- **firebase_core / cloud_firestore**: banco de dados em nuvem (NoSQL) usado para armazenar e consultar turmas, alunos, questões, provas e correções.
-- **firebase_auth**: autenticação dos professores (login, cadastro e recuperação de senha).
-- **google_fonts**: fontes personalizadas usadas no padrão visual do app.
-- **flutter_svg**: renderização dos ícones/ilustrações em SVG das telas.
-- **pdf / printing**: geração e impressão/download do PDF da prova gerada.
-- **mobile_scanner**: leitura do QR code da folha de respostas pela câmera do dispositivo.
-- **qr_flutter**: geração de QR codes (usado no "QR code de teste" da tela de correção).
-- **excel**: geração da planilha `.xlsx` exportada na tela de Relatórios.
-- **path_provider**: localização da pasta de documentos do app para salvar a planilha exportada (Android/iOS/desktop).
+- **Flutter / Dart**: framework e linguagem do app Android.
+- **firebase_core / cloud_firestore**: banco de dados em nuvem (NoSQL) com turmas, alunos, questões, provas, correções e perfis.
+- **firebase_auth**: login, cadastro, verificação de e-mail e recuperação de senha.
+- **google_fonts / flutter_svg**: fontes e ilustrações do padrão visual.
+- **pdf / printing**: geração do PDF da prova e da folha de respostas com QR Code, para baixar ou imprimir.
+- **mobile_scanner**: leitura do QR Code da folha de respostas pela câmera.
+- **image_picker / image**: foto da folha de respostas e leitura das bolinhas marcadas (feita no próprio app, sem serviço externo).
+- **excel / path_provider / share_plus**: geração da planilha `.xlsx` e compartilhamento pelo Android.
+- **GitHub Actions**: a cada push e Pull Request roda o `flutter analyze` (Flutter 3.47.8).
 
 ## 6. Estrutura de Pastas
 
@@ -298,28 +351,28 @@ O Firestore não guarda dados em tabelas com linhas e colunas, ele guarda em col
 
 ```
 lib/
-  data/                  # acesso a dados auxiliares e cálculos (ex.: relatorios_calculos.dart)
-  models/                # entidades do app (Turma, Aluno, Question, ResultadoCorrecao...)
+  data/                  # repositório de turmas/alunos e cálculos dos relatórios
+  models/                # entidades do app (Turma, Aluno, Question, ProvaGerada, ResultadoCorrecao...)
   routes/                # nomes/definições das rotas do app
   screens/               # telas do aplicativo, uma subpasta por área
-    correcao/            # fluxo de Corrigir Prova (QR code, leitura, resultado)
+    correcao/            # Corrigir Prova (QR Code, leitura da folha, resultado, provas corrigidas)
     home/                # Home
-    login/               # Login e Cadastro
-    provas/              # Criar Prova
-    questoes/            # Banco de Questões
+    login/               # Login, Cadastro e verificação de e-mail
+    perfil/              # Perfil do professor
+    provas/              # Criar Prova, Minhas Provas e Visualizar Prova
+    questoes/            # formulário de questão
     relatorios/          # Relatórios
     turmas/              # Turmas e Alunos
-  services/              # comunicação com o Firebase (repositórios) e regras do app
+  services/              # comunicação com o Firebase, leitor da folha, PDF e Excel
   theme/                 # cores, tipografia e espaçamentos do app
-  utils/                 # validadores, geradores e utilitários diversos
+  utils/                 # validadores, layout da folha de respostas, PDF e utilitários
   widgets/               # componentes de interface reutilizáveis entre telas
-  auth_gate.dart         # mostra Login ou Home conforme a sessão do usuário
+  auth_gate.dart         # mostra Login, verificação de e-mail ou Home conforme a sessão
   firebase_options.dart  # configuração de conexão com o Firebase (gerada pelo FlutterFire)
   main.dart              # inicialização do Firebase e ponto de entrada do app
 docs/
+  manual/                # manual do usuário (uma seção por módulo)
   telas/                 # prints das telas do app
-  modelo-dados/          # material de apoio do modelo de dados
-  backlog/               # material de apoio do backlog de cada entrega
 test/                    # testes automatizados (flutter test)
 ```
 
@@ -327,20 +380,22 @@ test/                    # testes automatizados (flutter test)
 
 📌 **N1**, revisado a cada entrega
 
+**Usar o app (professor):** instale o arquivo `app-release.apk` em um celular Android (permita "instalar apps desconhecidos" quando o Android pedir), crie a conta e confirme o e-mail. O uso de cada tela está no [manual do usuário](docs/manual/README.md).
+
+**Rodar o código (desenvolvimento):**
+
 ```
 1. git clone https://github.com/lauraMeie/Trabalho-Dev.git
 2. cd Trabalho-Dev
 3. flutter pub get
-4. flutter run -d chrome
+4. flutter run            (com um celular Android conectado ou um emulador)
 ```
 
 Observações:
-- O app já inclui a configuração do Firebase (`lib/firebase_options.dart`). Para usar outro projeto Firebase, rode `flutterfire configure`.
-- Para rodar no Android, o app Android precisa estar registrado no projeto Firebase (`flutterfire configure`, marcando a plataforma android).
-- A leitura de QR code pela câmera funciona melhor em dispositivo/emulador Android ou iOS; no navegador, use a entrada manual do código na tela de correção.
+- O app já inclui a configuração do Firebase (`lib/firebase_options.dart` e `android/app/google-services.json`).
 - Para gerar o APK: `flutter build apk --release`. O arquivo fica em `build/app/outputs/flutter-apk/app-release.apk`.
-- Para rodar os testes automatizados: `flutter test`.
-- Para verificar a análise estática: `flutter analyze`.
+- Na primeira leitura de QR Code ou foto da folha, o Android pede permissão para usar a câmera.
+- Testes automatizados: `flutter test`. Análise estática: `flutter analyze`.
 
 ## 8. Backlog de Atividades da N2
 
@@ -399,8 +454,59 @@ Observações:
 | Persistir a geração de prova no Firestore | 20/10 | Concluído |
 | Remover tela duplicada de Banco de Questões | 20/10 | Concluído |
 
+## 9. Backlog de Atividades da N3
+
+📌 **N3**
+
+> Entregas da N3 registradas no repositório (commits e Pull Requests na branch `main`). O planejamento completo, com todas as tarefas, responsáveis e prazos, está na planilha de backlog da N3.
+
+### Laura Meier
+
+| Tarefa | Data | Status |
+|---|---|---|
+| Minhas Provas: excluir prova e aba Editar Provas | 16/11 | Concluído |
+| Ajustes no login e na senha, com verificação de e-mail no cadastro | 23/11 | Concluído |
+| Gravar o professor dono (`uid`) nas provas e filtrar Minhas Provas por ele | 25/11 | Concluído |
+| Validação de matrícula repetida na turma | 25/11 | Concluído |
+| Tela de Perfil, acesso pelo menu e correção do logout | 25/11 | Concluído |
+| Configuração do Firebase Hosting | 25/11 | Concluído |
+
+### Tiago Spezia
+
+| Tarefa | Data | Status |
+|---|---|---|
+| B40 — Folha de respostas com QR Code e leitura pela câmera das alternativas marcadas ([#37](https://github.com/lauraMeie/Trabalho-Dev/pull/37)) | 24/11 | Concluído |
+| Correção do check do GitHub Actions (versão do Flutter fixada) ([#37](https://github.com/lauraMeie/Trabalho-Dev/pull/37)) | 24/11 | Concluído |
+| B41 — Lista de provas corrigidas com dados reais ([#38](https://github.com/lauraMeie/Trabalho-Dev/pull/38)) | 25/11 | Concluído |
+| B42 — Manual do usuário de Correção e Relatórios ([#39](https://github.com/lauraMeie/Trabalho-Dev/pull/39), [#41](https://github.com/lauraMeie/Trabalho-Dev/pull/41), [#45](https://github.com/lauraMeie/Trabalho-Dev/pull/45), [#49](https://github.com/lauraMeie/Trabalho-Dev/pull/49)) | 25/11 | Concluído |
+| B38 — Nome da prova e matrícula no resultado da correção ([#42](https://github.com/lauraMeie/Trabalho-Dev/pull/42)) | 25/11 | Concluído |
+| Remoção do QR Code de teste ([#43](https://github.com/lauraMeie/Trabalho-Dev/pull/43)) e correção duplicada da mesma folha ([#44](https://github.com/lauraMeie/Trabalho-Dev/pull/44)) | 25/11 | Concluído |
+| B08 — Relatório de notas em Excel por turma, com respostas e compartilhamento ([#47](https://github.com/lauraMeie/Trabalho-Dev/pull/47)) | 25/11 | Concluído |
+| Baixar e imprimir o PDF de uma prova já salva ([#48](https://github.com/lauraMeie/Trabalho-Dev/pull/48)) | 25/11 | Concluído |
+
+### Nicolas Renan Dellani
+
+| Tarefa | Data | Status |
+|---|---|---|
+| B02 — Validação de turmas e alunos (nome e matrícula repetidos, espaços extras) ([#46](https://github.com/lauraMeie/Trabalho-Dev/pull/46)) | 25/11 | Concluído |
+| B03 — Totais de turmas e alunos para os outros módulos ([#46](https://github.com/lauraMeie/Trabalho-Dev/pull/46)) | 25/11 | Concluído |
+| B05 — Busca por nome e matrícula em turmas e alunos ([#46](https://github.com/lauraMeie/Trabalho-Dev/pull/46)) | 25/11 | Concluído |
+| B07 — Testes automatizados dos models e validações ([#46](https://github.com/lauraMeie/Trabalho-Dev/pull/46)) | 25/11 | Concluído |
+
+### Henrique Roberti Ribeiro
+
+| Tarefa | Data | Status |
+|---|---|---|
+| Minhas Provas e Visualizar Prova (consulta e edição das provas salvas) | 16/11 | Concluído |
+| QR Code de identificação no PDF da prova, com teste automatizado | 23/11 | Concluído |
+
+### Phelipe Gonçalves Blanco
+
+| Tarefa | Data | Status |
+|---|---|---|
+| *(a completar)* | | |
+
 ---
-Vídeo referente as telas da N2 (https://youtube.com/shorts/d_52iMSrJM0?feature=share)
 
 <div align="center">
 
