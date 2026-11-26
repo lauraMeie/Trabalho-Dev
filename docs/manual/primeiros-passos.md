@@ -151,7 +151,7 @@ Mais abaixo, o perfil mostra quantas turmas e alunos você tem (por exemplo, *"3
 - Se ainda não há turmas, aparece *"Você ainda não cadastrou nenhuma turma."*
 - Se a turma não tem alunos, aparece *"Nenhum aluno nesta turma."*
 
-Esta lista é só para consulta. Para cadastrar ou alterar turmas e alunos, use **Turmas** (veja a seção [Turmas e Alunos](README.md)).
+Esta lista é só para consulta. Para cadastrar ou alterar turmas e alunos, use **Turmas** (veja a seção [Turmas e Alunos](turmas-e-alunos.md)).
 
 ---
 
