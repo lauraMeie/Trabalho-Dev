@@ -1,7 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
 import '../../data/turmas_repository.dart';
 import '../../models/aluno.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/firestore_errors.dart';
+import '../../utils/texto_utils.dart';
+import '../../utils/turma_validator.dart';
 
 /// Tela de cadastro/edição de aluno (N2 — grava no Firestore).
 /// Se `alunoParaEditar` for informado, a tela entra em modo de edição.
@@ -25,6 +31,7 @@ class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
   late final TextEditingController _nomeController;
   late final TextEditingController _matriculaController;
   bool _salvando = false;
+  String? _erroMatricula;
 
   bool get _editando => widget.alunoParaEditar != null;
 
@@ -50,11 +57,25 @@ class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final messenger = ScaffoldMessenger.of(context);
-    final nome = _nomeController.text.trim();
+    final nome = TextoUtils.normalizarEspacos(_nomeController.text);
     final matricula = _matriculaController.text.trim();
     setState(() => _salvando = true);
 
     try {
+      final repetida = await _repo.existeAlunoComMatricula(
+        widget.turmaId,
+        matricula,
+        ignorarAlunoId: widget.alunoParaEditar?.id,
+      );
+      if (repetida) {
+        if (!mounted) return;
+        setState(() {
+          _erroMatricula = AlunoValidator.erroMatriculaRepetida;
+          _salvando = false;
+        });
+        return;
+      }
+
       if (_editando) {
         final original = widget.alunoParaEditar!;
         await _repo.atualizarAluno(
@@ -67,10 +88,15 @@ class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
       if (!mounted) return;
       Navigator.of(context).pop();
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Não foi possível salvar o aluno: $e')),
-      );
-      if (mounted) setState(() => _salvando = false);
+      messenger.showSnackBar(SnackBar(content: Text(mensagemDeErro(e))));
+      if (!mounted) return;
+      if (e is TimeoutException) {
+        // Sem internet: o Firestore guarda a alteração e envia depois.
+        // Fecha a tela para o professor não salvar duas vezes.
+        Navigator.of(context).pop();
+      } else {
+        setState(() => _salvando = false);
+      }
     }
   }
 
@@ -93,9 +119,7 @@ class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
                   labelText: 'Nome do aluno',
                   prefixIcon: Icon(Icons.person_outline),
                 ),
-                validator: (value) => (value == null || value.trim().isEmpty)
-                    ? 'Informe o nome'
-                    : null,
+                validator: AlunoValidator.nome,
               ),
               const SizedBox(height: AppSpacing.md),
               TextFormField(
@@ -104,9 +128,13 @@ class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
                   labelText: 'Matrícula',
                   prefixIcon: Icon(Icons.badge_outlined),
                 ),
-                validator: (value) => (value == null || value.trim().isEmpty)
-                    ? 'Informe a matrícula'
-                    : null,
+                forceErrorText: _erroMatricula,
+                onChanged: (_) {
+                  if (_erroMatricula != null) {
+                    setState(() => _erroMatricula = null);
+                  }
+                },
+                validator: AlunoValidator.matricula,
               ),
               const SizedBox(height: AppSpacing.lg),
               ElevatedButton(
