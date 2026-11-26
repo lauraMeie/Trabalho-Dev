@@ -140,14 +140,23 @@ Na tela inicial, toque em **Relatórios**, ou em **Ver relatórios** na tela de 
 
 ## 9. Exportar as notas para o Excel
 
-Em **Relatórios**, toque em **Exportar para Excel**.
+1. Em **Relatórios**, toque em **Exportar para Excel**.
+2. O app gera a planilha `.xlsx` e abre a **janela de compartilhar** do Android.
+3. Escolha onde salvar ou para onde enviar: **Google Drive**, **Arquivos**, **WhatsApp**, **e-mail** etc.
 
-<img src="img/correcao/13-exportar-excel.png" width="300" alt="Planilha exportada">
+A planilha vem pronta para lançar as notas no sistema acadêmico, com estas abas:
 
-A planilha `.xlsx` traz, para cada prova corrigida: **Aluno, Turma, Prova, Nota, Acertos, Erros, Em branco e Corrigido em**, pronta para lançar no sistema acadêmico.
+| Aba | O que mostra |
+|---|---|
+| **Resumo** | Uma linha por prova corrigida: aluno, matrícula, turma, prova, nota, acertos, erros, em branco e data da correção. |
+| **Uma aba por turma** (ex.: *3 ano a*) | Os alunos da turma nas linhas e as provas nas colunas, com a nota de cada prova e a **média** do aluno. Fica em branco a prova que o aluno ainda não fez. |
+| **Respostas** | A alternativa que cada aluno marcou em cada questão (Q1, Q2...): **✓** acertou, **✗** errou, **—** em branco. |
 
-- **No navegador:** o arquivo vai para a pasta de **Downloads**.
-- **No celular:** a mensagem mostra o caminho onde a planilha foi salva.
+<img src="img/correcao/13-excel-aba-turma.png" width="440" alt="Aba da turma na planilha exportada">
+
+<img src="img/correcao/13-excel-aba-respostas.png" width="560" alt="Aba Respostas na planilha exportada">
+
+*Exemplo de planilha exportada: aba da turma (alunos × provas, com média) e aba Respostas.*
 
 ---
 
