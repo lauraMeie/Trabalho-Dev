@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/prova_gerada.dart';
 import '../../services/prova_consulta_repository.dart';
+import '../../services/prova_pdf_service.dart';
 import '../../utils/exam_generator.dart';
 
 class VisualizarProvaScreen extends StatefulWidget {
@@ -13,6 +14,7 @@ class VisualizarProvaScreen extends StatefulWidget {
 class _VisualizarProvaScreenState extends State<VisualizarProvaScreen> {
   final _repository = ProvaConsultaRepository();
   late Future<ProvaGerada> _future;
+  bool _gerandoPdf = false;
   @override
   void initState() { super.initState(); _recarregar(); }
   void _recarregar() { _future = _repository.buscar(widget.provaId); }
@@ -115,9 +117,49 @@ class _VisualizarProvaScreenState extends State<VisualizarProvaScreen> {
     }
   }
 
+  /// Gera de novo o PDF da prova salva (baixar ou imprimir). Usa sempre
+  /// `widget.provaId`, o ID do documento no Firestore, que vai no QR Code
+  /// da folha de respostas.
+  Future<void> _exportarPdf(ProvaGerada prova, {required bool baixar}) async {
+    if (_gerandoPdf) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _gerandoPdf = true);
+    try {
+      if (baixar) {
+        await ProvaPdfService.baixar(prova, provaId: widget.provaId);
+      } else {
+        await ProvaPdfService.imprimir(prova, provaId: widget.provaId);
+      }
+    } catch (erro) {
+      debugPrint('Erro ao gerar PDF: $erro');
+      messenger.showSnackBar(const SnackBar(
+        content: Text('Não foi possível gerar o PDF. Tente novamente.')));
+    } finally {
+      if (mounted) setState(() => _gerandoPdf = false);
+    }
+  }
+
+  /// Botões de PDF na AppBar: só aparecem depois que a prova carregou e
+  /// usam a versão mais recente (recarregada após cada edição).
+  Widget _acoesPdf() => FutureBuilder<ProvaGerada>(future: _future, builder: (context, snapshot) {
+    if (snapshot.connectionState != ConnectionState.done || !snapshot.hasData) {
+      return const SizedBox.shrink();
+    }
+    final prova = snapshot.data!;
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      if (_gerandoPdf)
+        const Padding(padding: EdgeInsets.symmetric(horizontal: 12),
+          child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+      IconButton(tooltip: 'Baixar PDF', icon: const Icon(Icons.download),
+        onPressed: _gerandoPdf ? null : () => _exportarPdf(prova, baixar: true)),
+      IconButton(tooltip: 'Imprimir', icon: const Icon(Icons.print),
+        onPressed: _gerandoPdf ? null : () => _exportarPdf(prova, baixar: false)),
+    ]);
+  });
+
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Visualizar Prova')),
+    appBar: AppBar(title: const Text('Visualizar Prova'), actions: [_acoesPdf()]),
     body: FutureBuilder<ProvaGerada>(future: _future, builder: (context, snapshot) {
       if (snapshot.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
       if (snapshot.hasError) return Center(child: Text('Erro: ${snapshot.error}'));
