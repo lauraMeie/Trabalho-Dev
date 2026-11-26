@@ -79,7 +79,7 @@ O app só deixa salvar se tudo estiver certo. Quando falta algo, a mensagem apar
 3. O formulário abre **já preenchido**. Altere o que precisar (inclusive qual é a alternativa correta).
 4. Toque em **Salvar**. Aparece a mensagem **"Questão atualizada."**
 
-> **Importante:** editar uma questão no banco **não altera provas já geradas**. Cada prova guarda uma cópia das questões no momento em que foi criada, para que as folhas já impressas continuem batendo com o gabarito. Para corrigir uma questão dentro de uma prova já salva, use **Minhas Provas → Visualizar Prova → Editar questão** (veja a seção [Criar Prova](README.md)).
+> **Importante:** editar uma questão no banco **não altera provas já geradas**. Cada prova guarda uma cópia das questões no momento em que foi criada, para que as folhas já impressas continuem batendo com o gabarito. Para corrigir uma questão dentro de uma prova já salva, use **Minhas Provas → Visualizar Prova → Editar questão** (veja a seção [Criar Prova](criar-prova.md)).
 
 <img src="../telas/17-editar-questao.jpg" width="300" alt="Editar questão dentro de uma prova salva (Minhas Provas → Visualizar Prova)">
 
@@ -118,7 +118,7 @@ As questões cadastradas aqui aparecem automaticamente na primeira etapa da tela
 2. marca as questões que vão entrar na prova;
 3. segue para a configuração da prova.
 
-O passo a passo completo está na seção [Criar Prova](README.md).
+O passo a passo completo está na seção [Criar Prova](criar-prova.md).
 
 ---
 

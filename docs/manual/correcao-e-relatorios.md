@@ -6,7 +6,7 @@ Este módulo corrige as provas automaticamente. Você fotografa a folha de respo
 
 **Antes de começar, você precisa:**
 - estar logado no app;
-- ter gerado a prova em **Criar Prova** (veja a seção [Criar Prova](README.md));
+- ter gerado a prova em **Criar Prova** (veja a seção [Criar Prova](criar-prova.md));
 - ter as **folhas de respostas** impressas e preenchidas pelos alunos.
 
 ---
