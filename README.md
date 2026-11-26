@@ -500,9 +500,12 @@ Observações:
 | Minhas Provas e Visualizar Prova (consulta e edição das provas salvas) | 16/11 | Concluído |
 | QR Code de identificação no PDF da prova, com teste automatizado | 23/11 | Concluído |
 
-Phelipe Gonçalves Blanco
-Tarefa	Data	Status
-Manual do usuário do Banco de Questões: abrir o banco, carregar questões de exemplo, criar, editar e excluir questão, regras do formulário, prévia de prova gerada e problemas comuns (docs/manual/banco-de-questoes.md)
+### Phelipe Gonçalves Blanco
+
+| Tarefa | Data | Status |
+|---|---|---|
+| Manual do usuário do Banco de Questões: abrir o banco, carregar questões de exemplo, criar, editar e excluir questão, regras do formulário, prévia de prova gerada e problemas comuns ([docs/manual/banco-de-questoes.md](docs/manual/banco-de-questoes.md)) | 26/11 | Concluído |
+
 ---
 
 <div align="center">
