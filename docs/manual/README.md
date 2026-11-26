@@ -6,7 +6,7 @@ Passo a passo de cada módulo do app, com prints das telas.
 |---|---|---|
 | Primeiros passos (login, cadastro e tela inicial) | Laura Meier | `primeiros-passos.md` *(em construção)* |
 | Turmas e Alunos | Nicolas Renan Dellani | `turmas-e-alunos.md` *(em construção)* |
-| Banco de Questões | Phelipe Gonçalves Blanco | `banco-de-questoes.md` *(em construção)* |
+| Banco de Questões | Phelipe Gonçalves Blanco | [banco-de-questoes.md](banco-de-questoes.md) |
 | Criar Prova | Henrique Roberti Ribeiro | `criar-prova.md` *(em construção)* |
 | Correção de Provas e Relatórios | Tiago Spezia | [correcao-e-relatorios.md](correcao-e-relatorios.md) |
 
