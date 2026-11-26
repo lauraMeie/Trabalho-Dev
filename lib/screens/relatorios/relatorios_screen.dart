@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart' show ShareResultStatus;
 
 import '../../data/relatorios_calculos.dart';
 import '../../models/correction_result.dart';
@@ -255,15 +256,16 @@ class _BotaoExportarExcelState extends State<_BotaoExportarExcel> {
     try {
       final caminho = await ExcelExportService.exportar(widget.resultados);
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            caminho == null
-                ? 'Planilha baixada com sucesso.'
-                : 'Planilha salva em: $caminho',
-          ),
-        ),
-      );
+      if (caminho == null) {
+        // Web: o navegador já baixou o arquivo.
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Planilha baixada com sucesso.')),
+        );
+        return;
+      }
+      final mensagem = await _compartilhar(caminho);
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(mensagem)));
     } catch (_) {
       if (!mounted) return;
       messenger.showSnackBar(
@@ -273,6 +275,31 @@ class _BotaoExportarExcelState extends State<_BotaoExportarExcel> {
       );
     } finally {
       if (mounted) setState(() => _exportando = false);
+    }
+  }
+
+  /// Abre a janela de compartilhamento com a planilha salva e devolve a
+  /// mensagem do SnackBar.
+  Future<String> _compartilhar(String caminho) async {
+    final caixa = context.findRenderObject() as RenderBox?;
+    final origem = caixa == null
+        ? null
+        : caixa.localToGlobal(Offset.zero) & caixa.size;
+    try {
+      final status = await ExcelExportService.compartilhar(
+        caminho,
+        origem: origem,
+      );
+      return switch (status) {
+        ShareResultStatus.success => 'Planilha compartilhada com sucesso.',
+        ShareResultStatus.dismissed =>
+          'Compartilhamento cancelado. Toque em "Exportar para Excel" '
+              'para gerar e compartilhar de novo.',
+        ShareResultStatus.unavailable => 'Planilha gerada e salva em: $caminho',
+      };
+    } catch (_) {
+      // Plataforma sem compartilhamento de arquivos: fica só o arquivo salvo.
+      return 'Planilha salva em: $caminho';
     }
   }
 
